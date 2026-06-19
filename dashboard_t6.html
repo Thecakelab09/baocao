@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cake Lab — Dashboard Tháng 6/2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f0e11; --surface:#1a1820; --surface2:#231f2e;
+  --border:rgba(255,255,255,0.07);
+  --accent:#f5c842; --accent2:#ff8c5a; --accent3:#7ee8a2; --accent4:#60c4f7;
+  --red:#ff5c5c; --text:#f0ecff; --muted:#8b879d; --radius:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(15,14,17,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;height:52px;gap:0}
+.nav-brand{font-family:'Fraunces',serif;font-size:18px;color:var(--accent);margin-right:28px;white-space:nowrap}
+.nav-back{font-size:12px;color:var(--muted);text-decoration:none;margin-right:20px;transition:color .15s}
+.nav-back:hover{color:var(--text)}
+.nav-tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.tab{padding:14px 14px;color:var(--muted);cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-live{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--accent3);white-space:nowrap}
+.nav-live::before{content:'';width:6px;height:6px;background:var(--accent3);border-radius:50%;animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* LOADING */
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px}
+.spinner{width:42px;height:42px;border:3px solid var(--surface2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:14px;color:var(--muted)}
+.error-box{background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);border-radius:var(--radius);padding:20px 24px;max-width:520px;margin:40px auto;text-align:center}
+.error-box h3{color:var(--red);margin-bottom:8px}
+.error-box p{font-size:13px;color:var(--muted);line-height:1.7}
+.error-box code{background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:11.5px;color:var(--accent)}
+
+/* SECTIONS */
+.section{display:none;padding:28px 24px;max-width:1200px;margin:0 auto}
+.section.active{display:block}
+.section-title{font-family:'Fraunces',serif;font-size:24px;font-weight:300;margin-bottom:5px}
+.section-sub{color:var(--muted);font-size:13px;margin-bottom:28px}
+.month-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(245,200,66,.15),rgba(245,200,66,.05));border:1px solid rgba(245,200,66,.3);padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;color:var(--accent);margin-bottom:16px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:28px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent)}
+.kpi-card.blue::before{background:var(--accent4)}
+.kpi-card.green::before{background:var(--accent3)}
+.kpi-card.orange::before{background:var(--accent2)}
+.kpi-card.red::before{background:var(--red)}
+.kpi-icon{font-size:20px;margin-bottom:10px}
+.kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px}
+.kpi-value{font-size:22px;font-weight:700;line-height:1.1;margin-bottom:4px}
+.kpi-target{font-size:11px;color:var(--muted);margin-bottom:7px}
+.progress-bar{height:4px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;background:var(--accent);transition:width .8s ease}
+.kpi-pct{font-size:12px;font-weight:600;margin-top:6px}
+.pct-good{color:var(--accent3)}.pct-warn{color:var(--accent)}.pct-bad{color:var(--red)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:24px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--surface2)}
+th{padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;white-space:nowrap}
+td{padding:12px 16px;border-top:1px solid var(--border);white-space:nowrap}
+tr:hover td{background:rgba(255,255,255,.03)}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-good{background:rgba(126,232,162,.15);color:var(--accent3)}
+.badge-warn{background:rgba(245,200,66,.15);color:var(--accent)}
+.badge-bad{background:rgba(255,92,92,.15);color:var(--red)}
+
+/* STORE CARDS */
+.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:16px;margin-bottom:28px}
+.store-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.store-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.store-icon{width:36px;height:36px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.store-name{font-weight:700;font-size:15px}
+.store-addr{font-size:11px;color:var(--muted)}
+.store-metric{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--border);font-size:13px}
+.store-metric-label{color:var(--muted)}
+.store-metric-value{font-weight:600}
+
+/* BAR CHART */
+.bar-item{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
+.bar-label{width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:12px}
+.bar-track{flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px}
+.bar-val{width:80px;text-align:right;font-size:12px;font-weight:600}
+
+/* TOP PRODUCTS */
+.top-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:28px}
+.top-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.top-card-head{background:var(--surface2);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.top-card-icon{width:28px;height:28px;background:rgba(245,200,66,.15);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.top-card-name{font-weight:700;font-size:13px}
+.top-row{display:flex;align-items:center;gap:9px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
+.top-row:last-child{border-bottom:none}
+.top-rank{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.r1{background:rgba(255,215,0,.2);color:#ffd700}
+.r2{background:rgba(200,200,200,.15);color:#ccc}
+.r3{background:rgba(205,127,50,.2);color:#cd7f32}
+.rx{background:var(--surface2);color:var(--muted)}
+.top-name{flex:1;font-size:12px;font-weight:600;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-qty{font-size:14px;font-weight:700;color:var(--accent);flex-shrink:0}
+.top-empty{padding:16px;font-size:12px;color:var(--muted);text-align:center}
+
+/* DIAG */
+.diag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:28px}
+.diag-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.diag-dot{width:12px;height:12px;border-radius:99px;flex-shrink:0}
+.diag-title{font-weight:700;font-size:14px}
+.diag-body{font-size:12px;color:var(--muted);line-height:1.7;margin-top:10px}
+
+.h2{font-size:16px;font-weight:700;margin-bottom:14px}
+.note-box{background:var(--surface);border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px}
+.strong{color:var(--text);font-weight:600}
+
+footer{text-align:center;padding:28px 24px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);margin-top:40px}
+.chip{display:inline-block;padding:2px 8px;background:var(--surface2);border-radius:99px;font-size:11px;color:var(--muted);margin-right:6px}
+
+@media(max-width:640px){
+  nav{padding:0 14px}
+  .nav-brand{font-size:15px;margin-right:12px}
+  .section{padding:18px 14px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .store-grid,.top-grid,.diag-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<script>
+// AUTH GUARD — BGĐ only
+(function() {
+  const raw = sessionStorage.getItem('tcl_user');
+  if (!raw) { window.location.replace('login.html'); return; }
+  const user = JSON.parse(raw);
+  if (user.role !== 'bgd') { window.location.replace('login.html'); return; }
+})();
+</script>
+
+<nav>
+  <div class="nav-brand">🎂 TCL</div>
+  <a class="nav-back" href="index.html">← Trang chủ</a>
+  <div class="nav-tabs">
+    <div class="tab active" onclick="switchTab('tongquan')">📊 Tổng quan</div>
+    <div class="tab" onclick="switchTab('cuahang')">🏪 Cửa hàng</div>
+    <div class="tab" onclick="switchTab('banchayt')">🔥 Bán chạy</div>
+    <div class="tab" onclick="switchTab('online')">🌐 Online</div>
+    <div class="tab" onclick="switchTab('marketing')">📣 Marketing</div>
+    <div class="tab" onclick="switchTab('chandoan')">🔍 Chẩn đoán</div>
+  </div>
+  <div class="nav-live">Live · Sheets</div>
+<button onclick="(function(){sessionStorage.removeItem('tcl_user');window.location.href='login.html';})()" style="padding:5px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#8b879d;font-size:12px;font-weight:500;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;margin-left:12px" onmouseover="this.style.color='#ff5c5c';this.style.borderColor='rgba(255,92,92,.4)'" onmouseout="this.style.color='#8b879d';this.style.borderColor='rgba(255,255,255,.12)'">Đăng xuất</button>
+</nav>
+
+<!-- LOADING STATE -->
+<div id="loading-screen" class="loading-screen">
+  <div class="spinner"></div>
+  <div class="loading-txt">Đang kéo dữ liệu từ Google Sheets...</div>
+</div>
+
+<!-- ERROR STATE -->
+<div id="error-screen" style="display:none">
+  <div class="error-box">
+    <h3>⚠️ Không thể tải dữ liệu</h3>
+    <p id="error-msg">Kiểm tra lại Apps Script deployment và đường truyền.</p>
+    <br>
+    <p style="font-size:11px">URL API: <code id="api-url-display"></code></p>
+  </div>
+</div>
+
+<!-- MAIN CONTENT (hidden until loaded) -->
+<div id="app" style="display:none">
+
+<!-- TỔNG QUAN -->
+<div class="section active" id="tab-tongquan">
+  <div class="month-badge">📅 Tháng 6 · 2026 · Live</div>
+  <div class="section-title">Dashboard Tháng 6 / 2026</div>
+  <div class="section-sub">Dữ liệu trực tiếp từ Google Sheets · Cập nhật mỗi lần mở trang</div>
+  <div class="kpi-grid" id="kpi-tongquan"></div>
+  <div class="h2">Kết quả 4 cửa hàng offline</div>
+  <div class="store-grid" id="stores-tongquan"></div>
+  <div class="h2">Bảng so sánh</div>
+  <div class="table-wrap"><table id="table-tongquan">
+    <thead><tr><th>Cửa hàng</th><th>Doanh thu TT</th><th>Chỉ tiêu</th><th>% HT</th><th>Số đơn</th><th>GTTB đơn</th><th>Số BSN</th></tr></thead>
+    <tbody id="tbody-tongquan"></tbody>
+  </table></div>
+</div>
+
+<!-- CỬA HÀNG -->
+<div class="section" id="tab-cuahang">
+  <div class="month-badge">📅 Tháng 6 · 2026</div>
+  <div class="section-title">Cửa hàng Offline</div>
+  <div class="section-sub">Chi tiết KPI từng cửa hàng</div>
+  <div id="cuahang-detail"></div>
+</div>
+
+<!-- BÁN CHẠY -->
+<div class="section" id="tab-banchayt">
+  <div class="month-badge">📅 Tháng 6 · 2026</div>
+  <div class="section-title">Top sản phẩm bán chạy</div>
+  <div class="section-sub">Top sản phẩm theo từng cửa hàng · Live từ Sheets</div>
+  <div class="top-grid" id="top-banchayt"></div>
+  <div class="h2" style="margin-top:8px">Top sản phẩm hủy</div>
+  <div class="top-grid" id="top-huy"></div>
+</div>
+
+<!-- ONLINE -->
+<div class="section" id="tab-online">
+  <div class="month-badge">📅 Tháng 6 · 2026</div>
+  <div class="section-title">Kênh Online</div>
+  <div class="section-sub">Doanh thu & hiệu suất kênh online</div>
+  <div class="kpi-grid" id="kpi-online"></div>
+</div>
+
+<!-- MARKETING -->
+<div class="section" id="tab-marketing">
+  <div class="month-badge">📅 Tháng 6 · 2026</div>
+  <div class="section-title">Marketing</div>
+  <div class="section-sub">Lead Ads & tự nhiên · Khách offline</div>
+  <div class="kpi-grid" id="kpi-marketing"></div>
+</div>
+
+<!-- CHẨN ĐOÁN -->
+<div class="section" id="tab-chandoan">
+  <div class="month-badge">📅 Tháng 6 · 2026</div>
+  <div class="section-title">Chẩn đoán</div>
+  <div class="section-sub">Tự động phân tích dựa trên số liệu thực tế từ Sheets</div>
+  <div class="diag-grid" id="diag-grid"></div>
+  <div class="h2">Hành động đề xuất</div>
+  <div id="diag-actions"></div>
+</div>
+
+</div><!-- /app -->
+
+<footer id="footer" style="display:none">
+  <span class="chip">🎂 The Cake Lab</span>
+  <span class="chip">Dashboard Tháng 6/2026</span>
+  <span class="chip">Live · Google Sheets</span>
+  <br><br>© 2026 The Cake Lab · Dữ liệu cập nhật tự động từ Google Sheets
+</footer>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbyBD7GRo8HxgXKXo5HjM9IS1ct68VtuoLNcqsxjbakt_wngNu3ig_pkcI9wxULzDpSN/exec';
+
+const CH_LIST = [
+  { key:'tueTinh',   icon:'🌿', name:'Tuệ Tĩnh',     addr:'CS1 · 45 Tuệ Tĩnh' },
+  { key:'timesCity', icon:'🏬', name:'TimesCity',     addr:'CS2 · Park 7 TimesCity' },
+  { key:'pbc',       icon:'🏪', name:'Phan Bội Châu', addr:'CS3 · 3A Phan Bội Châu' },
+  { key:'trungHoa',  icon:'🏠', name:'Trung Hòa',     addr:'CS4 · 26 Trung Hòa' },
+];
+
+const fmt  = v => Number(v||0).toLocaleString('vi-VN') + 'đ';
+const fmtM = v => (Number(v||0)/1e6).toFixed(1) + ' tr';
+const pct  = (a,b) => b ? Math.round(Number(a)/Number(b)*100) : 0;
+const pctClass = p => p >= 95 ? 'pct-good' : p >= 75 ? 'pct-warn' : 'pct-bad';
+const badgeClass = p => p >= 95 ? 'badge-good' : p >= 75 ? 'badge-warn' : 'badge-bad';
+
+function loadData() {
+  document.getElementById('api-url-display').textContent = API_URL;
+  return new Promise((resolve) => {
+    const cbName = 'tcl_cb_' + Date.now();
+    const timeout = setTimeout(() => {
+      cleanup();
+      showError('Timeout — Apps Script không phản hồi sau 15 giây. Kiểm tra deployment và quyền truy cập.');
+    }, 15000);
+
+    window[cbName] = function(data) {
+      cleanup();
+      if (data.error) { showError(data.error); return; }
+      render(data);
+      document.getElementById('loading-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('footer').style.display = 'block';
+      setTimeout(animateBars, 200);
+      resolve();
+    };
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const s = document.getElementById('jsonp-script');
+      if (s) s.remove();
+    }
+
+    const script = document.createElement('script');
+    script.id = 'jsonp-script';
+    script.src = API_URL + '?callback=' + cbName;
+    script.onerror = () => {
+      cleanup();
+      showError('Không thể kết nối tới Apps Script. Kiểm tra lại URL và quyền "Anyone".');
+    };
+    document.head.appendChild(script);
+  });
+}
+
+function showError(msg) {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('error-screen').style.display = 'block';
+  document.getElementById('error-msg').textContent = msg;
+}
+
+function render(D) {
+  renderTongQuan(D);
+  renderCuaHang(D);
+  renderBanChay(D);
+  renderOnline(D);
+  renderMarketing(D);
+  renderChanDoan(D);
+}
+
+// ── TỔNG QUAN ──
+function renderTongQuan(D) {
+  const totDT  = CH_LIST.reduce((s,c) => s + Number(D[c.key]?.doanhThu?.thucTe||0), 0);
+  const totMT  = CH_LIST.reduce((s,c) => s + Number(D[c.key]?.doanhThu?.chiTieu||0), 0);
+  const totDon = CH_LIST.reduce((s,c) => s + Number(D[c.key]?.soDon?.thucTe||0), 0);
+  const totBSN = CH_LIST.reduce((s,c) => s + Number(D[c.key]?.soBSN?.thucTe||0), 0);
+  const p = pct(totDT, totMT);
+
+  const onDT  = Number(D.online?.doanhThu?.thucTe||0);
+  const onMT  = Number(D.online?.doanhThu?.chiTieu||0);
+  const onDon = Number(D.online?.soDon?.thucTe||0);
+  const onBSN = Number(D.online?.soBSN?.thucTe||0);
+  const onGTTB = onDon ? Math.round(onDT/onDon) : 0;
+  const pOn = pct(onDT, onMT);
+
+  document.getElementById('kpi-tongquan').innerHTML = `
+    ${kpiCard('','💰','DT Offline (4 CH)', fmtM(totDT), 'Mục tiêu: '+fmtM(totMT), p)}
+    ${kpiCard('blue','🌐','Doanh thu Online', fmtM(onDT), 'Mục tiêu: '+fmtM(onMT), pOn)}
+    ${kpiCard('orange','🛍️','Số đơn Online', onDon+' đơn', 'Mục tiêu: '+Number(D.online?.soDon?.chiTieu||0), pct(onDon, D.online?.soDon?.chiTieu))}
+    ${kpiCard('green','💵','GTTB đơn Online', fmt(onGTTB), '', 0, true)}
+    ${kpiCard('green','🎂','BSN Online', onBSN+' cái', 'Mục tiêu: '+Number(D.online?.soBSN?.chiTieu||0), pct(onBSN, D.online?.soBSN?.chiTieu))}
+  `;
+
+  // Store cards
+  document.getElementById('stores-tongquan').innerHTML = CH_LIST.map(c => {
+    const ch = D[c.key] || {};
+    const dt = Number(ch.doanhThu?.thucTe||0);
+    const mt = Number(ch.doanhThu?.chiTieu||0);
+    const p  = pct(dt, mt);
+    return `<div class="store-card">
+      <div class="store-header">
+        <div class="store-icon">${c.icon}</div>
+        <div><div class="store-name">${c.name}</div><div class="store-addr">${c.addr}</div></div>
+      </div>
+      <div class="store-metric"><span class="store-metric-label">Doanh thu</span><span class="store-metric-value">${fmt(dt)}</span></div>
+      <div class="store-metric"><span class="store-metric-label">Chỉ tiêu</span><span class="store-metric-value" style="color:var(--muted)">${fmt(mt)}</span></div>
+      <div class="store-metric"><span class="store-metric-label">% HT</span><span class="badge ${badgeClass(p)}">${p}%</span></div>
+      <div class="store-metric"><span class="store-metric-label">Số đơn</span><span class="store-metric-value">${Number(ch.soDon?.thucTe||0).toLocaleString()}</span></div>
+      <div class="store-metric"><span class="store-metric-label">GTTB đơn</span><span class="store-metric-value">${fmt(ch.gttbDon)}</span></div>
+      <div class="store-metric"><span class="store-metric-label">Số BSN</span><span class="store-metric-value">${Number(ch.soBSN?.thucTe||0)}</span></div>
+    </div>`;
+  }).join('');
+
+  // Table
+  const rows = CH_LIST.map(c => {
+    const ch = D[c.key] || {};
+    const dt = Number(ch.doanhThu?.thucTe||0);
+    const mt = Number(ch.doanhThu?.chiTieu||0);
+    const p  = pct(dt, mt);
+    return `<tr>
+      <td>${c.icon} ${c.name}</td>
+      <td>${fmt(dt)}</td>
+      <td style="color:var(--muted)">${fmt(mt)}</td>
+      <td><span class="badge ${badgeClass(p)}">${p}%</span></td>
+      <td>${Number(ch.soDon?.thucTe||0).toLocaleString()}</td>
+      <td>${fmt(ch.gttbDon)}</td>
+      <td>${Number(ch.soBSN?.thucTe||0)}</td>
+    </tr>`;
+  });
+  const pOff = pct(totDT, totMT);
+  rows.push(`<tr style="font-weight:700">
+    <td>📊 Tổng offline</td>
+    <td>${fmt(totDT)}</td>
+    <td style="color:var(--muted)">${fmt(totMT)}</td>
+    <td><span class="badge ${badgeClass(pOff)}">${pOff}%</span></td>
+    <td>${totDon.toLocaleString()}</td>
+    <td>—</td>
+    <td>${totBSN}</td>
+  </tr>`);
+  rows.push(`<tr>
+    <td>🌐 Online tổng</td>
+    <td>${fmt(onDT)}</td>
+    <td style="color:var(--muted)">${fmt(onMT)}</td>
+    <td><span class="badge ${badgeClass(pOn)}">${pOn}%</span></td>
+    <td>${onDon.toLocaleString()}</td>
+    <td>${fmt(onGTTB)}</td>
+    <td>${onBSN}</td>
+  </tr>`);
+  document.getElementById('tbody-tongquan').innerHTML = rows.join('');
+}
+
+// ── CỬA HÀNG ──
+function renderCuaHang(D) {
+  const html = CH_LIST.map(c => {
+    const ch = D[c.key] || {};
+    const dt = Number(ch.doanhThu?.thucTe||0);
+    const mt = Number(ch.doanhThu?.chiTieu||0);
+    const p  = pct(dt, mt);
+    const pBSN = pct(ch.soBSN?.thucTe, ch.soBSN?.chiTieu);
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="width:38px;height:38px;background:var(--surface2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">${c.icon}</div>
+        <div><div style="font-weight:700;font-size:16px">${c.name}</div><div style="font-size:11px;color:var(--muted)">${c.addr}</div></div>
+        <span class="badge ${badgeClass(p)}" style="margin-left:auto">${p}% HT</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+        ${metricBox('Doanh thu', fmt(dt), fmt(mt))}
+        ${metricBox('Số đơn', Number(ch.soDon?.thucTe||0).toLocaleString(), Number(ch.soDon?.chiTieu||0).toLocaleString())}
+        ${metricBox('GTTB đơn', fmt(ch.gttbDon), '')}
+        ${metricBox('DT BSN', fmt(ch.dtBSN?.thucTe), fmt(ch.dtBSN?.chiTieu))}
+        ${metricBox('Số BSN', ch.soBSN?.thucTe||0, (ch.soBSN?.chiTieu||0)+' · '+pBSN+'%')}
+        ${metricBox('GTTB BSN', fmt(ch.gttbBSN), '')}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('cuahang-detail').innerHTML = html;
+}
+
+function metricBox(label, val, sub) {
+  return `<div style="background:var(--surface2);border-radius:10px;padding:12px 14px">
+    <div style="font-size:10.5px;color:var(--muted);margin-bottom:4px">${label}</div>
+    <div style="font-size:17px;font-weight:700">${val}</div>
+    ${sub?`<div style="font-size:10.5px;color:var(--muted);margin-top:2px">${sub}</div>`:''}
+  </div>`;
+}
+
+// ── BÁN CHẠY ──
+function renderBanChay(D) {
+  document.getElementById('top-banchayt').innerHTML = CH_LIST.map(c => topCard(c, D[c.key]?.topBanChay||[], '🔥')).join('');
+  document.getElementById('top-huy').innerHTML = CH_LIST.map(c => topCard(c, D[c.key]?.topHuy||[], '🗑️')).join('');
+}
+
+function topCard(c, items, emoji) {
+  const maxQ = items.length ? Math.max(...items.map(i=>i.soLuong)) : 1;
+  const rows = items.length ? items.slice(0,10).map((item, i) => {
+    const rankClass = i===0?'r1':i===1?'r2':i===2?'r3':'rx';
+    const barW = maxQ ? Math.round(item.soLuong/maxQ*100) : 0;
+    return `<div class="top-row">
+      <div class="top-rank ${rankClass}">${i+1}</div>
+      <div style="flex:1;min-width:0">
+        <div class="top-name">${item.ten}</div>
+        <div style="height:2px;background:rgba(255,255,255,.07);border-radius:1px;margin-top:4px;overflow:hidden">
+          <div style="height:2px;width:${barW}%;background:var(--accent);border-radius:1px"></div>
+        </div>
+      </div>
+      <div class="top-qty">${item.soLuong}</div>
+    </div>`;
+  }).join('') : `<div class="top-empty">Chưa có dữ liệu</div>`;
+
+  return `<div class="top-card">
+    <div class="top-card-head">
+      <div class="top-card-icon">${c.icon}</div>
+      <div class="top-card-name">${c.name}</div>
+      <div style="margin-left:auto;font-size:13px">${emoji}</div>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+// ── ONLINE ──
+function renderOnline(D) {
+  const on = D.online || {};
+  const dt   = Number(on.doanhThu?.thucTe||0);
+  const mt   = Number(on.doanhThu?.chiTieu||0);
+  const don  = Number(on.soDon?.thucTe||0);
+  const donMT= Number(on.soDon?.chiTieu||0);
+  const gttb = don ? Math.round(dt/don) : 0;
+  const bsn  = Number(on.soBSN?.thucTe||0);
+  const bsnMT= Number(on.soBSN?.chiTieu||0);
+
+  document.getElementById('kpi-online').innerHTML = `
+    ${kpiCard('blue','💰','Doanh thu online', fmtM(dt), 'Mục tiêu: '+fmtM(mt), pct(dt,mt))}
+    ${kpiCard('orange','🛍️','Số đơn online', don+' đơn', 'Mục tiêu: '+donMT, pct(don,donMT))}
+    ${kpiCard('green','💵','GTTB đơn', fmt(gttb), '', 0, true)}
+    ${kpiCard('green','🎂','BSN Online', bsn+' cái', 'Mục tiêu: '+bsnMT, pct(bsn,bsnMT))}
+  `;
+}
+
+// ── MARKETING ──
+function renderMarketing(D) {
+  const mk = D.marketing || {};
+  const ads  = Number(mk.leadAds?.thucTe||0);
+  const adsMT= Number(mk.leadAds?.chiTieu||0);
+  const tn   = Number(mk.leadTuNhien?.thucTe||0);
+  const tnMT = Number(mk.leadTuNhien?.chiTieu||0);
+  const kh   = Number(mk.khOffline?.thucTe||0);
+  const khMT = Number(mk.khOffline?.chiTieu||0);
+
+  document.getElementById('kpi-marketing').innerHTML = `
+    ${kpiCard('red','📣','Lead Ads', ads.toLocaleString(), 'Mục tiêu: '+adsMT.toLocaleString(), pct(ads,adsMT))}
+    ${kpiCard('orange','🌿','Lead Tự nhiên', tn.toLocaleString(), 'Mục tiêu: '+tnMT.toLocaleString(), pct(tn,tnMT))}
+    ${kpiCard('green','👥','Khách Offline', kh.toLocaleString(), 'Mục tiêu: '+khMT.toLocaleString(), pct(kh,khMT))}
+    ${kpiCard('blue','💬','Tổng Lead', (ads+tn).toLocaleString(), 'Ads + Tự nhiên', 0, true)}
+  `;
+}
+
+// ── CHẨN ĐOÁN ──
+function renderChanDoan(D) {
+  const issues = [];
+
+  CH_LIST.forEach(c => {
+    const ch = D[c.key] || {};
+    const p = pct(ch.doanhThu?.thucTe, ch.doanhThu?.chiTieu);
+    if (p < 70) issues.push({ icon:c.icon, name:c.name, p, msg:`Doanh thu ${p}% — cần xem xét ngay`, color:'var(--red)' });
+    else if (p < 85) issues.push({ icon:c.icon, name:c.name, p, msg:`Doanh thu ${p}% — theo dõi sát`, color:'var(--accent)' });
+  });
+
+  const onP = pct(D.online?.doanhThu?.thucTe, D.online?.doanhThu?.chiTieu);
+  if (onP < 80) issues.push({ icon:'🌐', name:'Online', p:onP, msg:`DT online ${onP}% — thiếu lead hoặc chốt thấp`, color:'var(--accent2)' });
+
+  const mkP = pct(D.marketing?.leadAds?.thucTe, D.marketing?.leadAds?.chiTieu);
+  if (mkP < 80) issues.push({ icon:'📣', name:'Lead Ads', p:mkP, msg:`Chỉ ${mkP}% mục tiêu — review creative/target`, color:'var(--accent4)' });
+
+  const diagHTML = issues.length ? issues.map(i => `
+    <div class="diag-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div class="diag-dot" style="background:${i.color}"></div>
+        <div class="diag-title">${i.icon} ${i.name}</div>
+        <span class="badge ${i.p<70?'badge-bad':'badge-warn'}" style="margin-left:auto">${i.p}%</span>
+      </div>
+      <div class="diag-body">${i.msg}</div>
+    </div>`) :
+    `<div class="diag-card"><div style="color:var(--accent3);font-size:24px;margin-bottom:8px">✅</div><div class="diag-title">Mọi chỉ số đều ổn</div><div class="diag-body">Tất cả KPI đang trên ngưỡng tốt. Tiếp tục duy trì!</div></div>`;
+
+  document.getElementById('diag-grid').innerHTML = diagHTML;
+
+  // Actions
+  const actions = issues.map(i =>
+    `<div class="note-box"><span class="strong">${i.icon} ${i.name} · ${i.p}% HT</span> — ${i.msg}</div>`
+  ).join('') || `<div class="note-box"><span class="strong">✅ Không có vấn đề cấp bách</span> — Tiếp tục theo dõi và duy trì đà tốt.</div>`;
+  document.getElementById('diag-actions').innerHTML = actions;
+}
+
+// ── HELPERS ──
+function kpiCard(cls, icon, label, value, target, p, noProgress) {
+  const pc = Number(p)||0;
+  const fillW = Math.min(pc, 100);
+  const fillColor = pc>=95?'var(--accent3)':pc>=75?'var(--accent)':'var(--red)';
+  return `<div class="kpi-card ${cls}">
+    <div class="kpi-icon">${icon}</div>
+    <div class="kpi-label">${label}</div>
+    <div class="kpi-value">${value}</div>
+    ${target?`<div class="kpi-target">${target}</div>`:''}
+    ${!noProgress&&pc?`<div class="progress-bar"><div class="progress-fill" style="width:${fillW}%;background:${fillColor}"></div></div>
+    <div class="kpi-pct ${pctClass(pc)}">${pc}% mục tiêu</div>`:''}
+  </div>`;
+}
+
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const ids=['tongquan','cuahang','banchayt','online','marketing','chandoan'];
+    t.classList.toggle('active', ids[i]===id);
+  });
+  document.querySelectorAll('.section').forEach(s=>{
+    s.classList.toggle('active', s.id==='tab-'+id);
+  });
+}
+
+// Animate progress bars after render
+function animateBars() {
+  document.querySelectorAll('.progress-fill').forEach(f=>{
+    const w=f.style.width; f.style.width='0';
+    setTimeout(()=>{ f.style.width=w; }, 100);
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>

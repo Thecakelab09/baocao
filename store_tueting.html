@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cake Lab - Tuệ Tĩnh T6/2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0e11;--surface:#1a1820;--surface2:#231f2e;--border:rgba(255,255,255,0.07);--accent:#f5c842;--accent2:#ff8c5a;--accent3:#7ee8a2;--accent4:#60c4f7;--red:#ff5c5c;--text:#f0ecff;--muted:#8b879d;--radius:14px;--sc:#7ee8a2;--sc-rgb:126,232,162;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+nav{position:sticky;top:0;z-index:100;background:rgba(15,14,17,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;height:52px;gap:0}
+.nav-brand{font-family:'Fraunces',serif;font-size:18px;color:var(--accent);margin-right:16px}
+.nav-back{font-size:12px;color:var(--muted);text-decoration:none;margin-right:16px}
+.nav-back:hover{color:var(--text)}
+.nav-store{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--sc);padding:4px 12px;border-radius:20px;background:rgba(var(--sc-rgb),.1);border:1px solid rgba(var(--sc-rgb),.25)}
+.nav-live{margin-left:10px;font-size:11px;color:var(--accent3);display:flex;align-items:center;gap:5px}
+.nav-live::before{content:'';width:6px;height:6px;background:var(--accent3);border-radius:50%;animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.nav-tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;margin-left:16px}
+.nav-tabs::-webkit-scrollbar{display:none}
+.tab{padding:14px 13px;color:var(--muted);cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--sc);border-bottom-color:var(--sc)}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.nav-user{font-size:12px;color:var(--muted)}
+.btn-logout{padding:5px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;transition:all .15s}
+.btn-logout:hover{color:var(--red);border-color:rgba(255,92,92,.4)}
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px}
+.spinner{width:42px;height:42px;border:3px solid var(--surface2);border-top-color:var(--sc);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:14px;color:var(--muted)}
+.error-box{background:rgba(255,92,92,.08);border:1px solid rgba(255,92,92,.25);border-radius:var(--radius);padding:24px;max-width:500px;margin:40px auto;text-align:center}
+.error-box h3{color:var(--red);margin-bottom:8px}
+.error-box p{font-size:13px;color:var(--muted);line-height:1.7}
+.section{display:none;padding:28px 24px;max-width:1100px;margin:0 auto}
+.section.active{display:block}
+.section-title{font-family:'Fraunces',serif;font-size:24px;font-weight:300;margin-bottom:5px}
+.section-sub{color:var(--muted);font-size:13px;margin-bottom:24px}
+.month-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(var(--sc-rgb),.1);border:1px solid rgba(var(--sc-rgb),.3);padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;color:var(--sc);margin-bottom:14px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:24px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--sc)}
+.kpi-card.warn::before{background:var(--accent)}
+.kpi-card.bad::before{background:var(--red)}
+.kpi-icon{font-size:20px;margin-bottom:10px}
+.kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.kpi-value{font-size:22px;font-weight:700;line-height:1.1;margin-bottom:4px}
+.kpi-target{font-size:11px;color:var(--muted);margin-bottom:8px}
+.progress-bar{height:4px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;background:var(--sc);transition:width .8s ease}
+.progress-fill.warn{background:var(--accent)}
+.progress-fill.bad{background:var(--red)}
+.kpi-pct{font-size:12px;font-weight:600;margin-top:6px;color:var(--sc)}
+.kpi-pct.warn{color:var(--accent)}
+.kpi-pct.bad{color:var(--red)}
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:24px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--surface2)}
+th{padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;white-space:nowrap}
+td{padding:12px 16px;border-top:1px solid var(--border)}
+tr:hover td{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-good{background:rgba(126,232,162,.15);color:var(--accent3)}
+.badge-warn{background:rgba(245,200,66,.15);color:var(--accent)}
+.badge-bad{background:rgba(255,92,92,.15);color:var(--red)}
+.top-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:24px}
+.top-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.top-card-head{background:var(--surface2);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.top-card-icon{width:28px;height:28px;background:rgba(var(--sc-rgb),.15);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.top-card-name{font-weight:700;font-size:13px}
+.top-row{display:flex;align-items:center;gap:9px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
+.top-row:last-child{border-bottom:none}
+.top-rank{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.r1{background:rgba(255,215,0,.2);color:#ffd700}
+.r2{background:rgba(200,200,200,.15);color:#ccc}
+.r3{background:rgba(205,127,50,.2);color:#cd7f32}
+.rx{background:var(--surface2);color:var(--muted)}
+.top-pname{flex:1;font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-qty{font-size:14px;font-weight:700;color:var(--sc);flex-shrink:0}
+.top-empty{padding:16px;font-size:12px;color:var(--muted);text-align:center}
+.diag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:24px}
+.diag-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.diag-dot{width:12px;height:12px;border-radius:99px;flex-shrink:0}
+.diag-title{font-weight:700;font-size:14px}
+.diag-body{font-size:12px;color:var(--muted);line-height:1.75;margin-top:10px}
+.note-box{background:var(--surface);border-left:3px solid var(--sc);border-radius:0 var(--radius) var(--radius) 0;padding:13px 16px;font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+.note-box strong{color:var(--text)}
+.h2{font-size:15px;font-weight:700;margin-bottom:14px;margin-top:4px}
+.hero{background:linear-gradient(150deg,#1a1624 0%,#0f0e11 60%,#151220 100%);padding:36px 36px 32px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:340px;height:340px;background:radial-gradient(circle,rgba(var(--sc-rgb),.07) 0%,transparent 70%);pointer-events:none}
+.hero-eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--sc);margin-bottom:10px}
+.hero-title{font-family:'Fraunces',serif;font-size:34px;font-weight:300;line-height:1.1;margin-bottom:6px}
+.hero-title em{font-style:italic;color:var(--sc)}
+.hero-sub{font-size:13px;color:var(--muted)}
+footer{text-align:center;padding:28px 24px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);margin-top:40px}
+@media(max-width:640px){nav{padding:0 14px}.section{padding:18px 14px}.hero{padding:22px 16px 26px}.hero-title{font-size:25px}.kpi-grid{grid-template-columns:repeat(2,1fr)}.top-grid,.diag-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<script>
+var API_URL = 'https://script.google.com/macros/s/AKfycbx12VWUMutqEXBpQrtXx-YbnAKyhzVbXypIgeaIXQalz39xjU0Uql_GwC5MIzjAhck0/exec';
+var STORE_KEY = 'tueTinh';
+
+var u = sessionStorage.getItem('tcl_user');
+if (!u) { window.location.replace('login.html'); }
+else {
+  var usr = JSON.parse(u);
+  if (usr.role !== 'bgd' && usr.store !== 'tueting') { window.location.replace('login.html'); }
+  else {
+    window._tclUser = usr;
+    document.addEventListener('DOMContentLoaded', function() {
+      var el = document.getElementById('navUser');
+      if (el) el.textContent = usr.name;
+    });
+  }
+}
+
+function fmtM(v){return (Number(v||0)/1e6).toFixed(1)+' tr';}
+function fmtN(v){return Number(v||0).toLocaleString('vi-VN');}
+function fmt(v){return Number(v||0).toLocaleString('vi-VN')+'d';}
+function pct(a,b){return b?Math.round(Number(a)/Number(b)*100):0;}
+function badgeCls(p){return p>=95?'badge-good':p>=75?'badge-warn':'badge-bad';}
+function pcls(p){return p>=95?'':p>=75?'warn':'bad';}
+
+function logout(){sessionStorage.removeItem('tcl_user');window.location.href='login.html';}
+
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(function(t,i){
+    var ids=['tongquan','banchayt','chandoan'];
+    t.classList.toggle('active',ids[i]===id);
+  });
+  document.querySelectorAll('.section').forEach(function(s){
+    s.classList.toggle('active',s.id==='tab-'+id);
+  });
+}
+
+function showError(msg){
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('error-screen').style.display='block';
+  document.getElementById('error-msg').textContent=msg;
+}
+
+function loadData(){
+  fetch(API_URL)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.error){showError(data.error);return;}
+      var ch=data[STORE_KEY];
+      if(!ch){showError('Khong tim thay: '+STORE_KEY);return;}
+      renderTQ(ch);
+      renderBC(ch);
+      renderDiag(ch);
+      document.getElementById('loading-screen').style.display='none';
+      document.getElementById('app').style.display='block';
+      document.getElementById('footer').style.display='block';
+      setTimeout(animateBars,200);
+    })
+    .catch(function(err){showError('Loi: '+err.message);});
+}
+
+function renderTQ(ch){
+  var dt=Number(ch.doanhThu&&ch.doanhThu.thucTe||0);
+  var dtMT=Number(ch.doanhThu&&ch.doanhThu.chiTieu||0);
+  var don=Number(ch.soDon&&ch.soDon.thucTe||0);
+  var donMT=Number(ch.soDon&&ch.soDon.chiTieu||0);
+  var gttb=Number(ch.gttbDon||0);
+  var bsn=Number(ch.soBSN&&ch.soBSN.thucTe||0);
+  var bsnMT=Number(ch.soBSN&&ch.soBSN.chiTieu||0);
+  var dtBSN=Number(ch.dtBSN&&ch.dtBSN.thucTe||0);
+  var dtBSNmt=Number(ch.dtBSN&&ch.dtBSN.chiTieu||0);
+  var gttbBSN=Number(ch.gttbBSN||0);
+  var daily=ch.daily||{};
+  var dtD=Number(daily.doanhThu&&daily.doanhThu.thucTe||0);
+  var dtDmt=Number(daily.doanhThu&&daily.doanhThu.chiTieu||0);
+  var donD=Number(daily.soDon&&daily.soDon.thucTe||0);
+  var gttbD=Number(daily.gttbDon||0);
+  var tuan=ch.tuan||{};
+  var wDT=Number(tuan.doanhThu&&tuan.doanhThu.thucTe||0);
+  var wDTmt=Number(tuan.doanhThu&&tuan.doanhThu.chiTieu||0);
+  var wDon=Number(tuan.soDon&&tuan.soDon.thucTe||0);
+  var wDonmt=Number(tuan.soDon&&tuan.soDon.chiTieu||0);
+  var wBSN=Number(tuan.soBSN&&tuan.soBSN.thucTe||0);
+  var wBSNmt=Number(tuan.soBSN&&tuan.soBSN.chiTieu||0);
+  var pDT=pct(dt,dtMT),pDon=pct(don,donMT),pBSN=pct(bsn,bsnMT);
+  var pDtBSN=pct(dtBSN,dtBSNmt),pDtD=pct(dtD,dtDmt);
+  document.getElementById('kpi-main').innerHTML=
+    kpiC(pcls(pDT),'DT Offline',fmtM(dt),'MT: '+fmtM(dtMT),pDT)+
+    kpiC(pcls(pDon),'So don',fmtN(don)+' don','MT: '+fmtN(donMT),pDon)+
+    kpiC('','GTTB don',fmt(gttb),'',0,1)+
+    kpiC(pcls(pBSN),'So BSN',fmtN(bsn)+' cai','MT: '+fmtN(bsnMT),pBSN);
+  document.getElementById('kpi-nhom').innerHTML=
+    kpiC(pcls(pDtBSN),'DT BSN',fmtM(dtBSN),'MT: '+fmtM(dtBSNmt),pDtBSN)+
+    kpiC('','GTTB BSN',fmt(gttbBSN),'',0,1)+
+    kpiC(pcls(pDtD),'DT Daily',fmtM(dtD),'MT: '+fmtM(dtDmt),pDtD)+
+    kpiC('','Don Daily',fmtN(donD)+' don','GTTB: '+fmt(gttbD),0,1);
+  var rows=[
+    rw('DT Offline',fmtM(dt),fmtM(dtMT),pDT,fmtM(wDT),fmtM(wDTmt),pct(wDT,wDTmt)),
+    rw('So don',fmtN(don),fmtN(donMT),pDon,fmtN(wDon),fmtN(wDonmt),pct(wDon,wDonmt)),
+    rw('So BSN',fmtN(bsn),fmtN(bsnMT),pBSN,fmtN(wBSN),fmtN(wBSNmt),pct(wBSN,wBSNmt)),
+    rw('DT BSN',fmtM(dtBSN),fmtM(dtBSNmt),pDtBSN,'--','--',0,1),
+    rw('DT Daily',fmtM(dtD),fmtM(dtDmt),pDtD,'--','--',0,1)
+  ];
+  document.getElementById('tbody-main').innerHTML=rows.join('');
+}
+
+function rw(lb,tt,ct,p,wtt,wct,wp,noPct){
+  var wb=noPct?'--':'<span class="badge '+badgeCls(wp)+'">'+wp+'%</span>';
+  return '<tr><td>'+lb+'</td><td style="font-weight:600">'+tt+'</td><td style="color:var(--muted)">'+ct+'</td>'+
+    '<td><span class="badge '+badgeCls(p)+'">'+p+'%</span></td>'+
+    '<td style="font-weight:600">'+wtt+'</td><td style="color:var(--muted)">'+wct+'</td><td>'+wb+'</td></tr>';
+}
+
+function renderBC(ch){
+  var grps=[['BSN','bsn'],['Banh Kem Nho','banhKemNho'],['Banh Mi','banhMi'],['Banh Khac','banhKhac']];
+  var rawBC=ch.topBanChay||{};
+  var rawHuy=ch.topHuy||{};
+  var bc=Array.isArray(rawBC)?{banhKemNho:rawBC}:rawBC;
+  var huy=Array.isArray(rawHuy)?{banhKemNho:rawHuy}:rawHuy;
+  document.getElementById('top-banchayt').innerHTML=grps.map(function(g){return tCard(g[0],bc[g[1]]||[]);}).join('');
+  document.getElementById('top-huy').innerHTML=grps.map(function(g){return tCard(g[0]+' Huy',huy[g[1]]||[]);}).join('');
+}
+
+function tCard(title,items){
+  var rows='';
+  if(items.length){
+    for(var i=0;i<Math.min(items.length,5);i++){
+      var rc=i===0?'r1':i===1?'r2':i===2?'r3':'rx';
+      rows+='<div class="top-row"><div class="top-rank '+rc+'">'+(i+1)+'</div>'+
+        '<div class="top-pname">'+(items[i].ten||'--')+'</div>'+
+        '<div class="top-qty">'+(items[i].soLuong||0)+'</div></div>';
+    }
+  }else{rows='<div class="top-empty">Chua co du lieu</div>';}
+  return '<div class="top-card"><div class="top-card-head">'+
+    '<div class="top-card-icon">&#128293;</div><div class="top-card-name">'+title+'</div></div>'+rows+'</div>';
+}
+
+function renderDiag(ch){
+  var dt=Number(ch.doanhThu&&ch.doanhThu.thucTe||0),dtMT=Number(ch.doanhThu&&ch.doanhThu.chiTieu||0);
+  var bsn=Number(ch.soBSN&&ch.soBSN.thucTe||0),bsnMT=Number(ch.soBSN&&ch.soBSN.chiTieu||0);
+  var don=Number(ch.soDon&&ch.soDon.thucTe||0),donMT=Number(ch.soDon&&ch.soDon.chiTieu||0);
+  var items=[
+    {t:'Doanh thu',p:pct(dt,dtMT),b:'TT: '+fmtM(dt)+' / MT: '+fmtM(dtMT)},
+    {t:'So don',p:pct(don,donMT),b:'TT: '+fmtN(don)+' / MT: '+fmtN(donMT)},
+    {t:'BSN',p:pct(bsn,bsnMT),b:'TT: '+fmtN(bsn)+' / MT: '+fmtN(bsnMT)}
+  ];
+  function dc(p){return p>=95?'var(--accent3)':p>=75?'var(--accent)':'var(--red)';}
+  function st(p){return p>=95?'Dat muc tieu':p>=75?'Theo doi':'Can xu ly';}
+  function sb(p){return p>=95?'badge-good':p>=75?'badge-warn':'badge-bad';}
+  document.getElementById('diag-grid').innerHTML=items.map(function(d){
+    return '<div class="diag-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'+
+      '<div class="diag-dot" style="background:'+dc(d.p)+'"></div>'+
+      '<div class="diag-title">'+d.t+'</div>'+
+      '<span class="badge '+sb(d.p)+'" style="margin-left:auto">'+st(d.p)+'</span></div>'+
+      '<div class="diag-body">'+d.b+' > '+d.p+'%</div></div>';
+  }).join('');
+  var notes=items.filter(function(d){return d.p<95;}).map(function(d){
+    return '<div class="note-box"><strong>'+d.t+' - '+d.p+'%</strong> -- '+d.b+'</div>';
+  }).join('');
+  document.getElementById('diag-actions').innerHTML=notes||'<div class="note-box"><strong>Tat ca chi so on</strong></div>';
+}
+
+function kpiC(cls,label,value,target,p,noP){
+  var pc=Number(p)||0,fw=Math.min(pc,100),fc=pc>=95?'':pc>=75?'warn':'bad';
+  var h='<div class="kpi-card '+cls+'">'+
+    '<div class="kpi-label">'+label+'</div><div class="kpi-value">'+value+'</div>'+
+    (target?'<div class="kpi-target">'+target+'</div>':'');
+  if(!noP&&pc){h+='<div class="progress-bar"><div class="progress-fill '+fc+'" style="width:'+fw+'%"></div></div>'+
+    '<div class="kpi-pct '+fc+'">'+pc+'% muc tieu</div>';}
+  return h+'</div>';
+}
+
+function animateBars(){
+  document.querySelectorAll('.progress-fill').forEach(function(f){
+    var w=f.style.width;f.style.width='0';
+    setTimeout(function(){f.style.width=w;},100);
+  });
+}
+
+loadData();
+</script>
+<nav>
+  <div class="nav-brand">&#127874; TCL</div>
+  <a class="nav-back" href="index.html">&larr; Trang chu</a>
+  <div class="nav-store">🌿 Tuệ Tĩnh</div>
+  <div class="nav-live">Live T6</div>
+  <div class="nav-tabs">
+    <div class="tab active" onclick="switchTab('tongquan')">Tong quan</div>
+    <div class="tab" onclick="switchTab('banchayt')">Ban chay</div>
+    <div class="tab" onclick="switchTab('chandoan')">Chan doan</div>
+  </div>
+  <div class="nav-r"><span class="nav-user" id="navUser"></span><button class="btn-logout" onclick="logout()">Dang xuat</button></div>
+</nav>
+<div class="hero">
+  <div class="hero-eyebrow">CS1 · 45 Tuệ Tĩnh - Dashboard T6/2026</div>
+  <div class="hero-title">Cua hang <em>Tuệ Tĩnh</em></div>
+  <div class="hero-sub">Du lieu live tu Google Sheets - Cap nhat moi lan mo trang</div>
+</div>
+<div id="loading-screen" class="loading-screen"><div class="spinner"></div><div class="loading-txt">Dang tai du lieu...</div></div>
+<div id="error-screen" style="display:none"><div class="error-box"><h3>Loi tai du lieu</h3><p id="error-msg"></p></div></div>
+<div id="app" style="display:none">
+<div class="section active" id="tab-tongquan">
+<div class="month-badge">Thang 6 - 2026 - Live</div>
+<div class="section-title">Tong quan thang 6</div>
+<div class="section-sub">CS1 · 45 Tuệ Tĩnh</div>
+<div class="kpi-grid" id="kpi-main"></div>
+<div class="h2">Chi tiet theo nhom</div>
+<div class="kpi-grid" id="kpi-nhom"></div>
+<div class="h2">Bang tong hop</div>
+<div class="table-wrap"><table><thead><tr><th>Chi so</th><th>TT Thang</th><th>Muc tieu</th><th>% HT</th><th>TT Tuan</th><th>CT Tuan</th><th>% Tuan</th></tr></thead><tbody id="tbody-main"></tbody></table></div>
+</div>
+<div class="section" id="tab-banchayt">
+<div class="month-badge">Thang 6 - 2026 - Live</div>
+<div class="section-title">San pham ban chay</div>
+<div class="section-sub">Top san pham theo tung nhom</div>
+<div class="top-grid" id="top-banchayt"></div>
+<div class="h2">Top san pham huy</div>
+<div class="top-grid" id="top-huy"></div>
+</div>
+<div class="section" id="tab-chandoan">
+<div class="month-badge">Thang 6 - 2026 - Live</div>
+<div class="section-title">Chan doan</div>
+<div class="section-sub">Tu dong phan tich du lieu thuc te</div>
+<div class="diag-grid" id="diag-grid"></div>
+<div class="h2">Goi y hanh dong</div>
+<div id="diag-actions"></div>
+</div>
+</div>
+<footer id="footer" style="display:none">The Cake Lab - Tuệ Tĩnh - CS1 · 45 Tuệ Tĩnh - T6/2026</footer>
+</body>
+</html>

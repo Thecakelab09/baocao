@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cake Lab — Dashboard Tháng 4/2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0e11; --surface:#1a1820; --surface2:#231f2e;
+  --border:rgba(255,255,255,0.07);
+  --accent:#f5c842; --accent2:#ff8c5a; --accent3:#7ee8a2; --accent4:#60c4f7;
+  --red:#ff5c5c; --text:#f0ecff; --muted:#8b879d; --radius:14px;
+  /* legacy aliases for content that uses old var names */
+  --caramel:var(--accent); --caramel-l:rgba(245,200,66,.12);
+  --brown:var(--surface2); --sage:var(--accent3); --sage-l:rgba(126,232,162,.12);
+  --blue:var(--accent4); --blue-l:rgba(96,196,247,.12);
+  --rose:var(--red); --rose-l:rgba(255,92,92,.12);
+  --amber:var(--accent2); --amber-l:rgba(255,140,90,.12);
+  --txt:var(--text); --txt2:var(--muted); --txt3:#6a677a; --cream:var(--surface2); --warm:var(--surface);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* TOPBAR / NAV */
+.topbar{background:rgba(15,14,17,.95);backdrop-filter:blur(12px);height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;color:var(--text)}
+.logo-icon{width:32px;height:32px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo-name{font-family:'Fraunces',serif;font-size:18px;color:var(--text)}
+.topbar-mid{display:flex;gap:2px}
+.tbn{padding:7px 14px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:transparent;font-family:'Be Vietnam Pro',sans-serif;transition:all .15s;border-bottom:2px solid transparent}
+.tbn:hover{color:var(--text)}
+.tbn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.topbar-r{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500}
+
+/* LAYOUT */
+.wrap{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.25rem .875rem}
+.sb-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:0 8px;margin:1rem 0 5px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;font-size:13px;color:var(--muted);cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:'Be Vietnam Pro',sans-serif;transition:all .12s;margin-bottom:2px}
+.sb-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.sb-item.active{background:rgba(245,200,66,.1);color:var(--accent);font-weight:600;border:1px solid rgba(245,200,66,.2)}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px}
+.main{padding:24px 28px}
+
+/* PAGE HEADER */
+.ph{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.pt{font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:var(--text)}
+.ps{font-size:12.5px;color:var(--muted);margin-top:3px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;font-size:12.5px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:'Be Vietnam Pro',sans-serif;transition:all .15s}
+.btn:hover{background:var(--surface2);color:var(--text)}
+.btn-p{background:rgba(245,200,66,.15);color:var(--accent);border-color:rgba(245,200,66,.35)}
+.btn-p:hover{background:rgba(245,200,66,.25)}
+
+/* SECTION HEADER */
+.sec-hdr{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:24px 0 12px;display:flex;align-items:center;gap:10px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;transition:transform .15s;overflow:hidden}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.3)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--radius) var(--radius) 0 0}
+.kpi.c-caramel::before{background:var(--accent)}
+.kpi.c-blue::before{background:var(--accent4)}
+.kpi.c-sage::before{background:var(--accent3)}
+.kpi.c-rose::before{background:var(--red)}
+.kpi.c-amber::before{background:var(--accent2)}
+.kpi-ico{font-size:18px;margin-bottom:8px}
+.kpi-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:5px}
+.kpi-v{font-size:19px;font-weight:700;color:var(--text);line-height:1.1}
+.kpi-sub{font-size:11px;margin-top:4px}
+.up{color:var(--accent3)}.dn{color:var(--red)}.neu{color:var(--muted)}
+.prog-wrap{height:4px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin-top:8px}
+.prog-fill{height:100%;border-radius:99px;transition:width .8s ease}
+.prog-fill.good{background:var(--accent3)}
+.prog-fill.warn{background:var(--accent)}
+.prog-fill.bad{background:var(--red)}
+.prog-fill.great{background:var(--accent)}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px}
+.card:last-child{margin-bottom:0}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ct{font-size:13px;font-weight:600;color:var(--text)}
+.ca{font-size:11.5px;color:var(--accent);cursor:pointer;border:none;background:none;font-family:'Be Vietnam Pro',sans-serif}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:0 10px 10px;text-align:left;border-bottom:1px solid var(--border);font-weight:600}
+.tbl td{padding:10px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.025)}
+.tbl .bold{font-weight:600;color:var(--text)}
+.tbl .money{font-weight:600;color:var(--accent)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.b-green{background:rgba(126,232,162,.15);color:var(--accent3)}
+.b-amber{background:rgba(245,200,66,.15);color:var(--accent)}
+.b-red{background:rgba(255,92,92,.15);color:var(--red)}
+.b-blue{background:rgba(96,196,247,.15);color:var(--accent4)}
+
+/* LIST ROWS */
+.ch-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.ch-row:last-child{border-bottom:none}
+.ch-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ch-nm{flex:1;font-size:12.5px;color:var(--muted)}
+.ch-bar{width:80px;height:4px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden}
+.ch-bf{height:100%;border-radius:99px}
+.ch-pct{font-size:12px;font-weight:600;color:var(--text);width:32px;text-align:right}
+
+/* DIAG CARDS */
+.diag-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.diag{border-radius:var(--radius);padding:16px;border:1px solid var(--border);background:var(--surface)}
+.diag.demand{border-color:rgba(255,92,92,.25);background:rgba(255,92,92,.05)}
+.diag.supply{border-color:rgba(245,200,66,.25);background:rgba(245,200,66,.04)}
+.diag.conv{border-color:rgba(255,140,90,.25);background:rgba(255,140,90,.05)}
+.diag.exec{border-color:rgba(96,196,247,.25);background:rgba(96,196,247,.05)}
+.diag-icon{font-size:18px;margin-bottom:8px}
+.diag-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px}
+.diag-detail{font-size:11.5px;color:var(--muted);line-height:1.75}
+
+/* BAN CHAY */
+.bc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.bc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.bc-head{background:var(--surface2);padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.bc-head-icon{width:32px;height:32px;background:rgba(245,200,66,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.bc-head-name{font-size:14px;font-weight:700;color:var(--text);font-family:'Fraunces',serif}
+.bc-head-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.bc-body{padding:4px 0}
+.bc-row{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
+.bc-row:last-child{border-bottom:none}
+.bc-row:hover{background:rgba(255,255,255,.025)}
+.bc-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.bc-n1{background:rgba(255,215,0,.2);color:#ffd700}
+.bc-n2{background:rgba(200,200,200,.15);color:#ccc}
+.bc-n3{background:rgba(205,127,50,.2);color:#cd7f32}
+.bc-nx{background:var(--surface2);color:var(--muted)}
+.bc-info{flex:1;min-width:0}
+.bc-pname{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc-pcat{font-size:11px;color:var(--muted);margin-top:1px}
+.bc-bar-w{height:2px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:4px}
+.bc-bar-f{height:2px;background:var(--accent);border-radius:2px}
+.bc-right{text-align:right;flex-shrink:0}
+.bc-qty{font-size:14px;font-weight:700;color:var(--accent)}
+.bc-qlbl{font-size:10px;color:var(--muted)}
+.bc-rev{font-size:11px;color:var(--muted);margin-top:1px}
+
+/* FOOTER */
+footer{font-size:12px;color:var(--muted);padding:24px 0 8px;text-align:center;border-top:1px solid var(--border);margin-top:24px}
+
+/* MONTH BADGE */
+.month-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.25);padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;color:var(--accent);margin-bottom:14px}
+
+/* STAT MINI BOXES (online section) */
+.stat-mini{background:var(--surface2);border-radius:10px;padding:12px;text-align:center}
+.stat-mini-lbl{font-size:10px;color:var(--muted);margin-bottom:4px}
+.stat-mini-val{font-size:15px;font-weight:700;color:var(--text)}
+.stat-mini-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+@media(max-width:860px){.bc-grid{grid-template-columns:1fr}}
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.g4,.diag-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:860px){.wrap{grid-template-columns:1fr}.sidebar{display:none}.g2,.g4{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}.main{padding:16px}}
+</style>
+</head>
+<body>
+<script>
+// AUTH GUARD — BGĐ only
+(function() {
+  const raw = sessionStorage.getItem('tcl_user');
+  if (!raw) { window.location.replace('login.html'); return; }
+  const user = JSON.parse(raw);
+  if (user.role !== 'bgd') { window.location.replace('login.html'); return; }
+})();
+</script>
+
+<div class="topbar">
+  <a href="index.html" style="color:var(--muted);font-size:12px;text-decoration:none;margin-right:16px;transition:color .15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">← Trang chủ</a><div class="logo"><div class="logo-icon">🎂</div><span class="logo-name">The Cake Lab</span></div>
+  <nav class="topbar-mid">
+    <button class="tbn active" data-tab="tongquan">Tổng quan</button>
+    <button class="tbn" data-tab="cuahang">Cửa hàng</button>
+    <button class="tbn" data-tab="online">Online</button>
+    <button class="tbn" data-tab="marketing">Marketing</button>
+    <button class="tbn" data-tab="banchayt4">🔥 Bán Chạy</button>
+    <button class="tbn" data-tab="chandoan">Chẩn đoán</button>
+  </nav>
+  <div class="topbar-r">
+    <div class="chip">📅 Tháng 4 · 2026</div>
+    <div class="chip">📊 Báo cáo đầy đủ</div>
+    <button onclick="(function(){sessionStorage.removeItem('tcl_user');window.location.href='login.html';})()" style="padding:5px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#8b879d;font-size:12px;font-weight:500;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;margin-left:12px" onmouseover="this.style.color='#ff5c5c';this.style.borderColor='rgba(255,92,92,.4)'" onmouseout="this.style.color='#8b879d';this.style.borderColor='rgba(255,255,255,.12)'">Đăng xuất</button>
+  </div>
+</div>
+
+<div class="wrap">
+<aside class="sidebar">
+  <div class="sb-lbl">Báo cáo</div>
+  <button class="sb-item active" data-tab="tongquan">📊 Tổng quan tháng</button>
+  <button class="sb-item" data-tab="cuahang">📈 Cửa hàng offline</button>
+  <button class="sb-item" data-tab="online">🌐 Online</button>
+  <div class="sb-lbl">Cửa hàng</div>
+  <button class="sb-item" data-tab="cuahang">🏪 Tuệ Tĩnh</button>
+  <button class="sb-item" data-tab="cuahang">🏪 Timescity</button>
+  <button class="sb-item" data-tab="cuahang">🏪 Phan Bội Châu</button>
+  <button class="sb-item" data-tab="cuahang">🏪 Trung Hòa</button>
+  <div class="sb-lbl">Chức năng</div>
+  <button class="sb-item" data-tab="marketing">📣 Marketing</button>
+  <button class="sb-item" data-tab="banchayt4">🔥 Bán chạy T4</button>
+  <button class="sb-item" data-tab="chandoan">🔍 Chẩn đoán<span class="sb-badge">4</span></button>
+</aside>
+
+<main class="main" id="mainArea">
+
+<!-- ====== TAB TỔNG QUAN ====== -->
+<div class="tab-panel" id="tab-tongquan">
+  <div class="ph">
+    <div><div class="pt">Dashboard tháng 4 / 2026</div><div class="ps">Báo cáo đầy đủ tháng 4 · 4 cửa hàng offline + 1 kênh online</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn">⬇️ Xuất báo cáo</button>
+      <button class="btn btn-p" onclick="location.reload()">🔄 Cập nhật</button>
+    </div>
+  </div>
+
+  <div class="sec-hdr">Chỉ số tổng hợp tháng 4</div>
+  <div class="kpi-grid">
+    <div class="kpi c-caramel">
+      <div class="kpi-ico">💰</div><div class="kpi-lbl">DT Offline (4 CH)</div>
+      <div class="kpi-v">947,7 tr</div>
+      <div class="kpi-sub neu">Mục tiêu: ~1.314 tr</div>
+      <div class="prog-wrap"><div class="prog-fill warn" style="width:72%"></div></div>
+      <div class="kpi-sub neu" style="margin-top:3px">72% hoàn thành</div>
+    </div>
+    <div class="kpi c-blue">
+      <div class="kpi-ico">🌐</div><div class="kpi-lbl">Doanh thu Online</div>
+      <div class="kpi-v">547,0 tr</div>
+      <div class="kpi-sub dn">Mục tiêu: 1.086 tr · 50%</div>
+      <div class="prog-wrap"><div class="prog-fill bad" style="width:50%"></div></div>
+      <div class="kpi-sub dn" style="margin-top:3px">⚠️ 50% mục tiêu</div>
+    </div>
+    <div class="kpi c-amber">
+      <div class="kpi-ico">🛍️</div><div class="kpi-lbl">Tổng đơn Online</div>
+      <div class="kpi-v">1.234 đơn</div>
+      <div class="kpi-sub dn">Mục tiêu: 2.475 · 50%</div>
+      <div class="prog-wrap"><div class="prog-fill bad" style="width:50%"></div></div>
+      <div class="kpi-sub dn" style="margin-top:3px">50% mục tiêu</div>
+    </div>
+    <div class="kpi c-rose">
+      <div class="kpi-ico">🎂</div><div class="kpi-lbl">BSN Online</div>
+      <div class="kpi-v">606 cái</div>
+      <div class="kpi-sub neu">Mục tiêu: 1.024 · 59%</div>
+      <div class="prog-wrap"><div class="prog-fill warn" style="width:59%"></div></div>
+      <div class="kpi-sub neu" style="margin-top:3px">59% mục tiêu</div>
+    </div>
+    <div class="kpi c-sage">
+      <div class="kpi-ico">💵</div><div class="kpi-lbl">GTTB đơn Online</div>
+      <div class="kpi-v">443.252đ</div>
+      <div class="kpi-sub up">Mục tiêu: 438.788đ · 101%</div>
+      <div class="prog-wrap"><div class="prog-fill good" style="width:100%"></div></div>
+      <div class="kpi-sub up" style="margin-top:3px">✅ Vượt mục tiêu</div>
+    </div>
+  </div>
+
+  <div class="sec-hdr">Kết quả tháng 4 — 4 cửa hàng offline</div>
+  <div class="g4">
+    <div class="card" style="border-top:2px solid var(--accent)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--txt3);margin-bottom:8px">🏪 Tuệ Tĩnh</div>
+      <div style="font-size:19px;font-weight:500">257.361.300đ</div>
+      <div style="font-size:11px;color:var(--txt3);margin:3px 0 6px">Mục tiêu: 364.075.000đ</div>
+      <div class="prog-wrap"><div class="prog-fill warn" style="width:71%"></div></div>
+      <div style="font-size:11.5px;margin-top:5px" class="neu">71% · 1.132 đơn · GTTB 227.351đ</div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--accent4)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--txt3);margin-bottom:8px">🏪 Timescity</div>
+      <div style="font-size:19px;font-weight:500">292.780.500đ</div>
+      <div style="font-size:11px;color:var(--txt3);margin:3px 0 6px">Mục tiêu: 379.000.014đ</div>
+      <div class="prog-wrap"><div class="prog-fill warn" style="width:77%"></div></div>
+      <div style="font-size:11.5px;margin-top:5px" class="neu">77% · 1.499 đơn · GTTB 195.317đ</div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--accent3)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--txt3);margin-bottom:8px">🏪 Phan Bội Châu</div>
+      <div style="font-size:19px;font-weight:500">131.917.000đ</div>
+      <div style="font-size:11px;color:var(--txt3);margin:3px 0 6px">Mục tiêu: 197.000.000đ</div>
+      <div class="prog-wrap"><div class="prog-fill bad" style="width:67%"></div></div>
+      <div style="font-size:11.5px;margin-top:5px" class="dn">67% · 684 đơn · GTTB 192.861đ ⚠️</div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--accent2)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--txt3);margin-bottom:8px">🏪 Trung Hòa</div>
+      <div style="font-size:19px;font-weight:500">265.685.800đ</div>
+      <div style="font-size:11px;color:var(--txt3);margin:3px 0 6px">Mục tiêu: 374.000.000đ</div>
+      <div class="prog-wrap"><div class="prog-fill warn" style="width:71%"></div></div>
+      <div style="font-size:11.5px;margin-top:5px" class="neu">71% · 1.369 đơn · GTTB 194.073đ</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">🌐 Online tổng — tháng 4</div><span class="badge b-red">50% mục tiêu</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+        <div style="background:var(--surface2);border-radius:9px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:3px">Doanh thu</div>
+          <div style="font-size:15px;font-weight:500;color:var(--caramel)">546,97 tr</div>
+          <div style="font-size:10px;color:var(--txt3)">/ 1.086 tr MT</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:9px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:3px">Số đơn</div>
+          <div style="font-size:15px;font-weight:500">1.234</div>
+          <div style="font-size:10px;color:var(--txt3)">/ 2.475 MT · 50%</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:9px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:3px">GTTB đơn</div>
+          <div style="font-size:15px;font-weight:500;color:var(--sage)">443.252đ</div>
+          <div style="font-size:10px;color:var(--txt3)">/ 438.788 MT · 101% ✅</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:6px">Phân bổ doanh thu online theo điểm bán</div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--caramel)"></div><div class="ch-nm">Online Tuệ Tĩnh (271,8 tr)</div><div class="ch-bar"><div class="ch-bf" style="width:50%;background:var(--caramel)"></div></div><div class="ch-pct">50%</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--sage)"></div><div class="ch-nm">Online Trung Hòa (164,3 tr)</div><div class="ch-bar"><div class="ch-bf" style="width:30%;background:var(--sage)"></div></div><div class="ch-pct">30%</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--blue)"></div><div class="ch-nm">Online Timescity (62,4 tr)</div><div class="ch-bar"><div class="ch-bf" style="width:11%;background:var(--blue)"></div></div><div class="ch-pct">11%</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--rose)"></div><div class="ch-nm">Online PBC (48,5 tr)</div><div class="ch-bar"><div class="ch-bf" style="width:9%;background:var(--rose)"></div></div><div class="ch-pct">9%</div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">📣 Marketing — tháng 4</div></div>
+      <div class="ch-row"><div class="ch-nm">Lead từ Ads</div><div style="font-size:13px;font-weight:500">2.688</div><div style="font-size:11px;color:var(--txt3);margin:0 8px">/ 6.896 MT</div><span class="badge b-red">39%</span></div>
+      <div class="ch-row"><div class="ch-nm">Lead tự nhiên</div><div style="font-size:13px;font-weight:500">1.391</div><div style="font-size:11px;color:var(--txt3);margin:0 8px">/ 3.000 MT</div><span class="badge b-amber">46%</span></div>
+      <div class="ch-row"><div class="ch-nm">Tổng lead</div><div style="font-size:13px;font-weight:500">4.079</div><div style="font-size:11px;color:var(--txt3);margin:0 8px">/ 9.896 MT</div><span class="badge b-red">41%</span></div>
+      <div class="ch-row"><div class="ch-nm">KH offline Tuệ Tĩnh</div><div style="font-size:13px;font-weight:500">1.139</div><div style="font-size:11px;color:var(--txt3);margin:0 8px">/ 1.324 MT</div><span class="badge b-amber">86%</span></div>
+      <div class="ch-row"><div class="ch-nm">KH offline Timescity</div><div style="font-size:13px;font-weight:500">1.509</div><div style="font-size:11px;color:var(--txt3);margin:0 8px">/ 1.614 MT</div><span class="badge b-amber">93%</span></div>
+      <div class="ch-row"><div class="ch-nm">KH offline PBC</div><div style="font-size:13px;font-weight:500">675</div><div style="font-size:11px;color:var(--txt3);margin:0 8px">/ 986 MT</div><span class="badge b-red">68%</span></div>
+      <div class="ch-row"><div class="ch-nm">KH offline Trung Hòa</div><div style="font-size:13px;font-weight:500">1.360</div><div style="font-size:11px;color:var(--txt3);margin:0 8px">/ 1.636 MT</div><span class="badge b-amber">83%</span></div>
+      <div class="ch-row"><div class="ch-nm">Tổng KH offline</div><div style="font-size:13px;font-weight:500">4.683</div><div style="font-size:11px;color:var(--txt3);margin:0 8px">/ 5.585 MT</div><span class="badge b-amber">84%</span></div>
+    </div>
+  </div>
+
+  <!-- Chẩn đoán nhanh -->
+  <div class="sec-hdr">Công cụ chẩn đoán vấn đề nhanh</div>
+  <div class="diag-grid">
+    <div class="diag demand">
+      <div class="diag-icon">🔴</div>
+      <div class="diag-title">DEMAND — Lượng khách</div>
+      <div style="margin-bottom:8px"><span class="badge b-red">Cần chú ý</span></div>
+      <div class="diag-detail">Lead ads: 2.688/6.896 (39%)<br>Lead TN: 1.391/3.000 (46%)<br>PBC offline: 675/986 (68%)<br><br>→ Tăng budget ads; review targeting</div>
+    </div>
+    <div class="diag supply">
+      <div class="diag-icon">🟡</div>
+      <div class="diag-title">SUPPLY — Nguồn hàng</div>
+      <div style="margin-bottom:8px"><span class="badge b-green">Ổn định</span></div>
+      <div class="diag-detail">Bánh Daily online: 2.343 cái<br>(vượt 161% mục tiêu)<br>Các CH đủ hàng phục vụ<br><br>→ Không có vấn đề cần xử lý</div>
+    </div>
+    <div class="diag conv">
+      <div class="diag-icon">🟠</div>
+      <div class="diag-title">CONVERSION — Chốt đơn</div>
+      <div style="margin-bottom:8px"><span class="badge b-green">Tốt</span></div>
+      <div class="diag-detail">GTTB đơn online: 443.252đ<br>Vượt mục tiêu 101% ✅<br>Timescity GTTB: 195.317đ/226.946đ (86%)<br><br>→ Duy trì kịch bản tư vấn</div>
+    </div>
+    <div class="diag exec">
+      <div class="diag-icon">🔵</div>
+      <div class="diag-title">EXECUTION — Vận hành</div>
+      <div style="margin-bottom:8px"><span class="badge b-amber">Theo dõi</span></div>
+      <div class="diag-detail">Online tổng: 50% MT<br>PBC DT: 67% MT<br>Hiệu suất chốt ads: 21%<br><br>→ Kiểm tra quy trình PBC & online</div>
+    </div>
+  </div>
+
+  <!-- Bảng so sánh -->
+  <div class="sec-hdr">So sánh cửa hàng — tháng 4 / 2026</div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Cửa hàng</th><th>Doanh thu TT</th><th>Chỉ tiêu</th><th>% HT</th><th>Số đơn TT</th><th>% đơn</th><th>GTTB đơn</th><th>Số BSN</th><th>KH mới</th></tr></thead>
+        <tbody>
+          <tr><td class="bold">🏪 Tuệ Tĩnh</td><td class="money">257.361.300đ</td><td>364.075.000đ</td><td><span class="badge b-amber">71%</span></td><td>1.132</td><td><span class="badge b-amber">85%</span></td><td>227.351đ</td><td>104</td><td>152</td></tr>
+          <tr><td class="bold">🏪 Timescity</td><td class="money">292.780.500đ</td><td>379.000.014đ</td><td><span class="badge b-amber">77%</span></td><td>1.499</td><td><span class="badge b-green">90%</span></td><td>195.317đ</td><td>158</td><td>141</td></tr>
+          <tr><td class="bold">🏪 Phan Bội Châu</td><td class="money">131.917.000đ</td><td>197.000.000đ</td><td><span class="badge b-red">67%</span></td><td>684</td><td><span class="badge b-red">69%</span></td><td>192.861đ</td><td>50</td><td>75</td></tr>
+          <tr><td class="bold">🏪 Trung Hòa</td><td class="money">265.685.800đ</td><td>374.000.000đ</td><td><span class="badge b-amber">71%</span></td><td>1.369</td><td><span class="badge b-amber">80%</span></td><td>194.073đ</td><td>139</td><td>222</td></tr>
+          <tr style="background:rgba(245,200,66,.05)"><td class="bold">📊 Tổng offline</td><td class="money">947.744.600đ</td><td>~1.314 tr</td><td><span class="badge b-amber">72%</span></td><td>4.684</td><td><span class="badge b-amber">82%</span></td><td>—</td><td>451</td><td>590</td></tr>
+          <tr><td class="bold">🌐 Online tổng</td><td class="money">546.973.020đ</td><td>1.086.000.000đ</td><td><span class="badge b-red">50%</span></td><td>1.234</td><td><span class="badge b-red">50%</span></td><td>443.252đ</td><td>606</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <footer>© 2026 The Cake Lab · Dashboard nội bộ · Tháng 4/2026</footer>
+</div>
+
+<!-- ====== TAB CỬA HÀNG ====== -->
+<div class="tab-panel" id="tab-cuahang" style="display:none">
+  <div class="ph"><div><div class="pt">Cửa hàng Offline</div><div class="ps">Chi tiết 4 cửa hàng · Tháng 4/2026</div></div></div>
+
+  <div class="sec-hdr">Sản phẩm bán ra — tháng 4</div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">🏪 Tuệ Tĩnh — Sản phẩm</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--caramel)"></div><div class="ch-nm">Bánh kem nhỏ</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">2.197</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--blue)"></div><div class="ch-nm">Bánh mì</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">1.189</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--amber)"></div><div class="ch-nm">Bánh quy</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">605</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--rose)"></div><div class="ch-nm">Bánh sinh nhật</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">430</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--txt3)"></div><div class="ch-nm">Phụ kiện</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">160</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--sage)"></div><div class="ch-nm">Đồ ăn kèm</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">47</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:#9B7AB8"></div><div class="ch-nm">Bánh mùa vụ</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">8</div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">🏪 Timescity — Sản phẩm</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--caramel)"></div><div class="ch-nm">Bánh kem nhỏ</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">1.894</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--blue)"></div><div class="ch-nm">Bánh mì</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">1.021</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--rose)"></div><div class="ch-nm">Bánh sinh nhật</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">252</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--amber)"></div><div class="ch-nm">Bánh quy</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">255</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--txt3)"></div><div class="ch-nm">Phụ kiện</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">92</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--sage)"></div><div class="ch-nm">Đồ ăn kèm</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">42</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:#9B7AB8"></div><div class="ch-nm">Bánh mùa vụ</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">11</div></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">🏪 Phan Bội Châu — Sản phẩm</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--caramel)"></div><div class="ch-nm">Bánh kem nhỏ</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">1.089</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--blue)"></div><div class="ch-nm">Bánh mì</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">419</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--rose)"></div><div class="ch-nm">Bánh sinh nhật</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">111</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--amber)"></div><div class="ch-nm">Bánh quy</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">105</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--txt3)"></div><div class="ch-nm">Phụ kiện</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">75</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--sage)"></div><div class="ch-nm">Đồ ăn kèm</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">13</div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">🏪 Trung Hòa — Sản phẩm</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--caramel)"></div><div class="ch-nm">Bánh kem nhỏ</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">2.163</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--blue)"></div><div class="ch-nm">Bánh mì</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">818</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--sage)"></div><div class="ch-nm">Đồ uống</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">455</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--rose)"></div><div class="ch-nm">Bánh sinh nhật</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">323</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--amber)"></div><div class="ch-nm">Bánh quy</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">248</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:var(--txt3)"></div><div class="ch-nm">Phụ kiện</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">160</div></div>
+      <div class="ch-row"><div class="ch-dot" style="background:#9B7AB8"></div><div class="ch-nm">Đồ ăn kèm</div><div style="font-size:12.5px;font-weight:500;margin-left:auto">44</div></div>
+    </div>
+  </div>
+
+  <div class="sec-hdr">BSN (Bánh sinh nhật) — tháng 4</div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Cửa hàng</th><th>BSN Thực tế</th><th>Chỉ tiêu</th><th>% HT</th><th>Nhận xét</th></tr></thead>
+        <tbody>
+          <tr><td class="bold">🏪 Tuệ Tĩnh</td><td>104</td><td>253</td><td><span class="badge b-red">41%</span></td><td class="dn">⚠️ Rất thấp so với mục tiêu</td></tr>
+          <tr><td class="bold">🏪 Timescity</td><td>158</td><td>240</td><td><span class="badge b-amber">66%</span></td><td class="neu">Cần cải thiện</td></tr>
+          <tr><td class="bold">🏪 Phan Bội Châu</td><td>50</td><td>89</td><td><span class="badge b-amber">56%</span></td><td class="neu">Dưới mục tiêu</td></tr>
+          <tr><td class="bold">🏪 Trung Hòa</td><td>139</td><td>184</td><td><span class="badge b-amber">76%</span></td><td class="neu">Gần đạt</td></tr>
+          <tr><td class="bold">🌐 Online</td><td>606</td><td>1.024</td><td><span class="badge b-amber">59%</span></td><td class="neu">Kênh online chính</td></tr>
+          <tr style="background:rgba(245,200,66,.05)"><td class="bold">Tổng BSN</td><td class="bold">1.057</td><td class="bold">~1.790</td><td><span class="badge b-amber">59%</span></td><td class="neu">Cần đẩy mạnh BSN</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <footer>© 2026 The Cake Lab · Dashboard nội bộ</footer>
+</div>
+
+<!-- ====== TAB ONLINE ====== -->
+<div class="tab-panel" id="tab-online" style="display:none">
+  <div class="ph"><div><div class="pt">Kênh Online</div><div class="ps">Báo cáo chi tiết kênh online · Tháng 4/2026</div></div></div>
+
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi c-caramel">
+      <div class="kpi-ico">💰</div><div class="kpi-lbl">Doanh thu online</div>
+      <div class="kpi-v">546.973.020đ</div>
+      <div class="kpi-sub dn">Mục tiêu: 1.086 tr · 50%</div>
+      <div class="prog-wrap"><div class="prog-fill bad" style="width:50%"></div></div>
+      <div class="kpi-sub dn" style="margin-top:3px">50% ⚠️</div>
+    </div>
+    <div class="kpi c-blue">
+      <div class="kpi-ico">🛍️</div><div class="kpi-lbl">Số đơn online</div>
+      <div class="kpi-v">1.234 đơn</div>
+      <div class="kpi-sub dn">Mục tiêu: 2.475 · 50%</div>
+      <div class="prog-wrap"><div class="prog-fill bad" style="width:50%"></div></div>
+      <div class="kpi-sub dn" style="margin-top:3px">50% ⚠️</div>
+    </div>
+    <div class="kpi c-sage">
+      <div class="kpi-ico">💵</div><div class="kpi-lbl">GTTB đơn</div>
+      <div class="kpi-v">443.252đ</div>
+      <div class="kpi-sub up">Mục tiêu: 438.788đ · 101%</div>
+      <div class="prog-wrap"><div class="prog-fill good" style="width:100%"></div></div>
+      <div class="kpi-sub up" style="margin-top:3px">✅ Vượt mục tiêu</div>
+    </div>
+    <div class="kpi c-amber">
+      <div class="kpi-ico">🎂</div><div class="kpi-lbl">BSN Online</div>
+      <div class="kpi-v">606 cái</div>
+      <div class="kpi-sub neu">Mục tiêu: 1.024 · 59%</div>
+      <div class="prog-wrap"><div class="prog-fill warn" style="width:59%"></div></div>
+      <div class="kpi-sub neu" style="margin-top:3px">59% mục tiêu</div>
+    </div>
+  </div>
+
+  <div class="sec-hdr">Chi tiết online theo điểm bán — tháng 4</div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Điểm bán</th><th>Doanh thu TT</th><th>Chỉ tiêu</th><th>% HT</th><th>Số đơn</th><th>% đơn</th><th>GTTB đơn</th><th>BSN</th></tr></thead>
+        <tbody>
+          <tr><td class="bold">Online Tuệ Tĩnh</td><td class="money">271.777.020đ</td><td>510.000.009đ</td><td><span class="badge b-amber">53%</span></td><td>627</td><td><span class="badge b-amber">55%</span></td><td>433.456đ</td><td>267</td></tr>
+          <tr><td class="bold">Online Trung Hòa</td><td class="money">164.261.000đ</td><td>316.035.726đ</td><td><span class="badge b-amber">52%</span></td><td>402</td><td><span class="badge b-amber">56%</span></td><td>408.609đ</td><td>179</td></tr>
+          <tr><td class="bold">Online Timescity</td><td class="money">62.391.600đ</td><td>145.000.018đ</td><td><span class="badge b-red">43%</span></td><td>153</td><td><span class="badge b-amber">45%</span></td><td>407.788đ</td><td>67</td></tr>
+          <tr><td class="bold">Online PBC</td><td class="money">48.543.400đ</td><td>114.716.300đ</td><td><span class="badge b-red">42%</span></td><td>112</td><td><span class="badge b-amber">41%</span></td><td>433.423đ</td><td>56</td></tr>
+          <tr style="background:rgba(245,200,66,.05)"><td class="bold">Tổng Online</td><td class="money">546.973.020đ</td><td>1.086.000.000đ</td><td><span class="badge b-red">50%</span></td><td>1.234</td><td><span class="badge b-red">50%</span></td><td>443.252đ</td><td>606</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec-hdr">Hiệu suất chốt đơn — tháng 4</div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><div class="ct">📞 Từ nguồn Ads</div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="background:var(--surface2);border-radius:9px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:3px">Số lead</div>
+          <div style="font-size:16px;font-weight:500">2.434</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:9px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:3px">Đơn chốt được</div>
+          <div style="font-size:16px;font-weight:500;color:var(--sage)">522</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:9px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:3px">Hiệu suất</div>
+          <div style="font-size:16px;font-weight:500;color:var(--amber)">21,4%</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">🌿 Từ nguồn Tự nhiên</div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="background:var(--surface2);border-radius:9px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:3px">Số lead</div>
+          <div style="font-size:16px;font-weight:500">2.544</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:9px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:3px">Đơn chốt được</div>
+          <div style="font-size:16px;font-weight:500;color:var(--sage)">712</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:9px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--txt3);margin-bottom:3px">Hiệu suất</div>
+          <div style="font-size:16px;font-weight:500;color:var(--sage)">28,0%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:0">
+    <div class="ch"><div class="ct">📊 Tổng hợp lead & chốt đơn</div></div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Nguồn</th><th>Số lead</th><th>Đơn chốt</th><th>Hiệu suất</th><th>Đánh giá</th></tr></thead>
+        <tbody>
+          <tr><td class="bold">Từ Ads</td><td>2.434</td><td>522</td><td><span class="badge b-amber">21,4%</span></td><td class="neu">Dưới ngưỡng 22%</td></tr>
+          <tr><td class="bold">Tự nhiên</td><td>2.544</td><td>712</td><td><span class="badge b-green">28,0%</span></td><td class="up">✅ Tốt hơn Ads</td></tr>
+          <tr style="background:rgba(245,200,66,.05)"><td class="bold">Tổng</td><td class="bold">4.978</td><td class="bold">1.234</td><td><span class="badge b-amber">24,8%</span></td><td class="neu">Xấp xỉ mục tiêu 25%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <footer>© 2026 The Cake Lab · Dashboard nội bộ</footer>
+</div>
+
+<!-- ====== TAB MARKETING ====== -->
+<div class="tab-panel" id="tab-marketing" style="display:none">
+  <div class="ph"><div><div class="pt">Marketing</div><div class="ps">Theo dõi lead & khách offline · Tháng 4/2026</div></div></div>
+
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi c-rose">
+      <div class="kpi-ico">📣</div><div class="kpi-lbl">Lead từ Ads (tháng)</div>
+      <div class="kpi-v">2.688</div>
+      <div class="kpi-sub dn">Mục tiêu: 6.896 · 39%</div>
+      <div class="prog-wrap"><div class="prog-fill bad" style="width:39%"></div></div>
+      <div class="kpi-sub dn" style="margin-top:3px">⚠️ Thiếu nghiêm trọng</div>
+    </div>
+    <div class="kpi c-blue">
+      <div class="kpi-ico">🌿</div><div class="kpi-lbl">Lead tự nhiên (tháng)</div>
+      <div class="kpi-v">1.391</div>
+      <div class="kpi-sub dn">Mục tiêu: 3.000 · 46%</div>
+      <div class="prog-wrap"><div class="prog-fill bad" style="width:46%"></div></div>
+      <div class="kpi-sub dn" style="margin-top:3px">⚠️ Dưới mục tiêu</div>
+    </div>
+    <div class="kpi c-sage">
+      <div class="kpi-ico">👥</div><div class="kpi-lbl">Tổng KH offline (tháng)</div>
+      <div class="kpi-v">4.683</div>
+      <div class="kpi-sub neu">Mục tiêu: 5.585 · 84%</div>
+      <div class="prog-wrap"><div class="prog-fill warn" style="width:84%"></div></div>
+      <div class="kpi-sub neu" style="margin-top:3px">Gần đạt</div>
+    </div>
+    <div class="kpi c-amber">
+      <div class="kpi-ico">💬</div><div class="kpi-lbl">Tổng lead online</div>
+      <div class="kpi-v">4.079</div>
+      <div class="kpi-sub dn">Ads 2.688 + TN 1.391</div>
+      <div class="prog-wrap"><div class="prog-fill bad" style="width:41%"></div></div>
+      <div class="kpi-sub dn" style="margin-top:3px">41% mục tiêu 9.896</div>
+    </div>
+  </div>
+
+  <div class="sec-hdr">Chi tiết khách offline — tháng 4</div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Cửa hàng</th><th>KH thực tế</th><th>Mục tiêu</th><th>% HT</th><th>Đánh giá</th></tr></thead>
+        <tbody>
+          <tr><td class="bold">🏪 Tuệ Tĩnh</td><td>1.139</td><td>1.324</td><td><span class="badge b-amber">86%</span></td><td class="neu">Gần đạt</td></tr>
+          <tr><td class="bold">🏪 Timescity</td><td>1.509</td><td>1.614</td><td><span class="badge b-amber">93%</span></td><td class="up">👍 Gần đạt tốt</td></tr>
+          <tr><td class="bold">🏪 Phan Bội Châu</td><td>675</td><td>986</td><td><span class="badge b-red">68%</span></td><td class="dn">⚠️ Thiếu traffic</td></tr>
+          <tr><td class="bold">🏪 Trung Hòa</td><td>1.360</td><td>1.636</td><td><span class="badge b-amber">83%</span></td><td class="neu">Gần đạt</td></tr>
+          <tr style="background:rgba(245,200,66,.05)"><td class="bold">Tổng</td><td class="bold">4.683</td><td class="bold">5.560</td><td><span class="badge b-amber">84%</span></td><td class="neu">Gần đạt tổng</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><div class="ct">💡 Nhận xét & Đề xuất tháng 4</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:rgba(255,92,92,.08);border-left:3px solid var(--red);padding:10px 14px;border-radius:0 8px 8px 0;font-size:12.5px;color:var(--muted)"><strong>Lead Ads chỉ đạt 39% mục tiêu</strong> — đây là điểm nghẽn lớn nhất tháng 4. Cần review toàn bộ chiến lược ads và tăng mạnh budget.</div>
+      <div style="background:rgba(255,92,92,.08);border-left:3px solid var(--red);padding:10px 14px;border-radius:0 8px 8px 0;font-size:12.5px;color:var(--muted)"><strong>PBC offline chỉ 68% khách</strong> và DT chỉ 67% mục tiêu — cần kiểm tra lại foot traffic và hoạt động tại điểm.</div>
+      <div style="background:rgba(255,140,90,.08);border-left:3px solid var(--accent2);padding:10px 14px;border-radius:0 8px 8px 0;font-size:12.5px;color:var(--muted)"><strong>BSN Tuệ Tĩnh chỉ 41%</strong> — rất thấp. Đẩy mạnh nhận đặt BSN online và tại cửa hàng.</div>
+      <div style="background:rgba(126,232,162,.08);border-left:3px solid var(--accent3);padding:10px 14px;border-radius:0 8px 8px 0;font-size:12.5px;color:var(--muted)"><strong>GTTB đơn online 443.252đ (101%)</strong> — team tư vấn đang làm tốt. Vấn đề nằm ở lượng lead đầu vào, không phải chất lượng chốt.</div>
+      <div style="background:rgba(126,232,162,.08);border-left:3px solid var(--accent3);padding:10px 14px;border-radius:0 8px 8px 0;font-size:12.5px;color:var(--muted)"><strong>Timescity khách offline 93%</strong> — điểm sáng nhất tháng 4 về traffic offline.</div>
+    </div>
+  </div>
+  <footer>© 2026 The Cake Lab · Dashboard nội bộ</footer>
+</div>
+
+<!-- ====== TAB CHẨN ĐOÁN ====== -->
+<div class="tab-panel" id="tab-chandoan" style="display:none">
+  <div class="ph"><div><div class="pt">Chẩn đoán vấn đề</div><div class="ps">Công cụ chẩn đoán 4 chiều · Tháng 4/2026</div></div></div>
+
+  <div class="sec-hdr">4 nhóm vấn đề</div>
+  <div class="diag-grid">
+    <div class="diag demand">
+      <div class="diag-icon">🔴</div>
+      <div class="diag-title">DEMAND — Lượng khách đầu vào</div>
+      <div style="margin-bottom:8px"><span class="badge b-red">Cần xử lý ngay</span></div>
+      <div class="diag-detail">
+        <strong>Lead Ads:</strong> 2.688/6.896 (39%)<br>
+        <strong>Lead TN:</strong> 1.391/3.000 (46%)<br>
+        <strong>PBC offline:</strong> 675/986 (68%)<br>
+        <strong>TH offline:</strong> 1.360/1.636 (83%)<br><br>
+        → Tăng budget ads; review targeting; kiểm tra foot traffic PBC
+      </div>
+    </div>
+    <div class="diag supply">
+      <div class="diag-icon">🟡</div>
+      <div class="diag-title">SUPPLY — Nguồn hàng</div>
+      <div style="margin-bottom:8px"><span class="badge b-green">Ổn định</span></div>
+      <div class="diag-detail">
+        <strong>Bánh Daily online:</strong> 2.343 cái (161% MT ✅)<br>
+        <strong>Các CH:</strong> Đủ hàng, không ghi nhận hết sớm<br><br>
+        → Không có vấn đề cần xử lý về supply
+      </div>
+    </div>
+    <div class="diag conv">
+      <div class="diag-icon">🟠</div>
+      <div class="diag-title">CONVERSION — Chốt đơn</div>
+      <div style="margin-bottom:8px"><span class="badge b-green">Tốt</span></div>
+      <div class="diag-detail">
+        <strong>GTTB online:</strong> 443.252đ / 438.788đ = 101% ✅<br>
+        <strong>Hiệu suất chốt TN:</strong> 28% (tốt)<br>
+        <strong>Hiệu suất chốt Ads:</strong> 21% (xấp xỉ ngưỡng)<br><br>
+        → Team đang làm tốt; duy trì kịch bản hiện tại
+      </div>
+    </div>
+    <div class="diag exec">
+      <div class="diag-icon">🔵</div>
+      <div class="diag-title">EXECUTION — Vận hành</div>
+      <div style="margin-bottom:8px"><span class="badge b-amber">Cần theo dõi</span></div>
+      <div class="diag-detail">
+        <strong>Online tổng:</strong> 50% MT — thiếu đầu vào<br>
+        <strong>PBC DT:</strong> 67% MT<br>
+        <strong>BSN Tuệ Tĩnh:</strong> 41% MT — rất thấp<br><br>
+        → Kiểm tra quy trình nhận đặt BSN & xử lý đơn online
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-hdr">Hành động ưu tiên tháng 5</div>
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Ưu tiên</th><th>Vấn đề</th><th>Chỉ số tháng 4</th><th>Người phụ trách</th><th>Hành động</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge b-red">🔴 Ngay</span></td><td>Lead Ads cực thấp</td><td>2.688/6.896 (39%)</td><td>Marketing Online</td><td>Tăng mạnh budget; A/B test creative mới</td></tr>
+          <tr><td><span class="badge b-red">🔴 Ngay</span></td><td>PBC traffic thấp</td><td>675/986 KH (68%)</td><td>QLCH PBC</td><td>Kiểm tra foot traffic; seeding khu vực</td></tr>
+          <tr><td><span class="badge b-red">🔴 Ngay</span></td><td>BSN Tuệ Tĩnh thấp</td><td>104/253 BSN (41%)</td><td>QLCH + Marketing</td><td>Đẩy nhận đặt trước BSN; campaign BSN</td></tr>
+          <tr><td><span class="badge b-amber">🟡 Tháng này</span></td><td>Online tổng 50% MT</td><td>547tr/1.086tr</td><td>Trưởng nhóm Online</td><td>Tăng lead đầu vào; review response time</td></tr>
+          <tr><td><span class="badge b-amber">🟡 Tháng này</span></td><td>Lead tự nhiên 46%</td><td>1.391/3.000</td><td>Content + SEO</td><td>Tăng seeding, review nội dung organic</td></tr>
+          <tr><td><span class="badge b-green">🟢 Duy trì</span></td><td>GTTB đơn online tốt</td><td>443.252đ (101%)</td><td>Team tư vấn</td><td>Giữ nguyên kịch bản tư vấn hiện tại</td></tr>
+          <tr><td><span class="badge b-green">🟢 Duy trì</span></td><td>Timescity traffic tốt</td><td>1.509/1.614 (93%)</td><td>QLCH Timescity</td><td>Nhân rộng hoạt động sang PBC</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <footer>© 2026 The Cake Lab · Dashboard nội bộ</footer>
+</div>
+
+<!-- ====== TAB BÁN CHẠY T4 ====== -->
+<div class="tab-panel" id="tab-banchayt4" style="display:none">
+  <div class="ph"><div><div class="pt">🔥 Mặt Hàng Bán Chạy</div><div class="ps">Top 10 sản phẩm bán chạy nhất tháng 4/2026 theo từng cửa hàng</div></div></div>
+
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:1.25rem">
+    <div class="kpi c-caramel">
+      <div class="kpi-ico">🌿</div><div class="kpi-lbl">Tuệ Tĩnh — Top 1</div>
+      <div class="kpi-v" style="font-size:15px">Whipping Caramel</div>
+      <div class="kpi-sub neu">356 chiếc · 6,79 tr đ</div>
+    </div>
+    <div class="kpi c-blue">
+      <div class="kpi-ico">🏬</div><div class="kpi-lbl">TimesCity — Top 1</div>
+      <div class="kpi-v" style="font-size:15px">Whipping Caramel</div>
+      <div class="kpi-sub neu">427 chiếc · 8,31 tr đ</div>
+    </div>
+    <div class="kpi c-sage">
+      <div class="kpi-ico">🏪</div><div class="kpi-lbl">Phan Bội Châu — Top 1</div>
+      <div class="kpi-v" style="font-size:15px">Whipping Caramel</div>
+      <div class="kpi-sub neu">166 chiếc · 3,15 tr đ</div>
+    </div>
+    <div class="kpi c-amber">
+      <div class="kpi-ico">🏠</div><div class="kpi-lbl">Trung Hòa — Top 1</div>
+      <div class="kpi-v" style="font-size:15px">Whipping Caramel</div>
+      <div class="kpi-sub neu">476 chiếc · 9,06 tr đ</div>
+    </div>
+  </div>
+
+  <div class="sec-hdr">Top 10 sản phẩm theo cửa hàng</div>
+  <div class="bc-grid" id="bc-grid"></div>
+
+  <div class="sec-hdr" style="margin-top:1.25rem">Sản phẩm bán chạy chung — xuất hiện nhiều nhất</div>
+  <div class="card">
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Sản phẩm</th><th>Tuệ Tĩnh</th><th>TimesCity</th><th>PBC</th><th>Trung Hòa</th><th>Xuất hiện</th><th>Nhóm</th></tr></thead>
+        <tbody>
+          <tr><td class="bold">🏆 Whipping Caramel</td><td>#1 — 356</td><td>#1 — 427</td><td>#1 — 166</td><td>#1 — 476</td><td><span class="badge b-green">4/4 CH</span></td><td>Bánh Kem Nhỏ</td></tr>
+          <tr><td class="bold">Bánh Tiramisu</td><td>#5 — 151</td><td>#2 — 157</td><td>#2 — 130</td><td>#2 — 155</td><td><span class="badge b-green">4/4 CH</span></td><td>Bánh Kem Nhỏ</td></tr>
+          <tr><td class="bold">Bánh Chocolate Berry</td><td>#9 — 112</td><td>#10 — 98</td><td>#5 — 73</td><td>#8 — 99</td><td><span class="badge b-green">4/4 CH</span></td><td>Bánh Kem Nhỏ</td></tr>
+          <tr><td class="bold">Bánh Kem Xoài Dừa</td><td>#6 — 125</td><td>#5 — 120</td><td>#7 — 68</td><td>#5 — 139</td><td><span class="badge b-green">4/4 CH</span></td><td>Bánh Kem Nhỏ</td></tr>
+          <tr><td class="bold">Bánh Hoa Quả Tươi</td><td>#8 — 114</td><td>#6 — 115</td><td>#3 — 80</td><td>#4 — 145</td><td><span class="badge b-green">4/4 CH</span></td><td>Bánh Kem Nhỏ</td></tr>
+          <tr><td class="bold">Su Giòn Pudding Dâu Tây</td><td>#4 — 198</td><td>#4 — 123</td><td>#9 — 57</td><td>#3 — 146</td><td><span class="badge b-green">4/4 CH</span></td><td>Bánh Kem Nhỏ</td></tr>
+          <tr><td class="bold">Su Giòn Pudding Cà Phê Caramel</td><td>#2 — 254</td><td>#8 — 106</td><td>#10 — 55</td><td>#6 — 124</td><td><span class="badge b-green">4/4 CH</span></td><td>Bánh Kem Nhỏ</td></tr>
+          <tr><td class="bold">Bánh Sữa Chua Dâu</td><td>—</td><td>—</td><td>#6 — 71</td><td>#10 — 96</td><td><span class="badge b-amber">2/4 CH</span></td><td>Bánh Kem Nhỏ</td></tr>
+          <tr><td class="bold">Bánh Triple Chocolate</td><td>—</td><td>—</td><td>#4 — 78</td><td>#9 — 97</td><td><span class="badge b-amber">2/4 CH</span></td><td>Bánh Kem Nhỏ</td></tr>
+          <tr><td class="bold">🍞 Bánh Mì Gối Trắng</td><td>—</td><td>#3 — 154</td><td>—</td><td>—</td><td><span class="badge b-blue">1/4 CH</span></td><td>Bánh Mì</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>© 2026 The Cake Lab · Dashboard nội bộ</footer>
+</div>
+
+</main>
+</div>
+
+<script>
+const BC_DATA = {
+  "Tuệ Tĩnh": {icon:"🌿", items:[
+    {ten:"Whipping Caramel",nhom:"Bánh Kem Nhỏ",da_ban:356,doanh_thu:6786000},
+    {ten:"Su Giòn Pudding Cà Phê Caramel Muối",nhom:"Bánh Kem Nhỏ",da_ban:254,doanh_thu:17339000},
+    {ten:"Cookie Yến Mạch",nhom:"Bánh Quy",da_ban:250,doanh_thu:3750000},
+    {ten:"Su Giòn Pudding Dâu Tây",nhom:"Bánh Kem Nhỏ",da_ban:198,doanh_thu:12558000},
+    {ten:"Bánh Tiramisu",nhom:"Bánh Kem Nhỏ",da_ban:151,doanh_thu:11520000},
+    {ten:"Bánh Kem Xoài Dừa",nhom:"Bánh Kem Nhỏ",da_ban:125,doanh_thu:9488000},
+    {ten:"Su Giòn Matcha Xoài Pudding Dừa Gạo Nếp",nhom:"Bánh Kem Nhỏ",da_ban:121,doanh_thu:8253000},
+    {ten:"Bánh Hoa Quả Tươi",nhom:"Bánh Kem Nhỏ",da_ban:114,doanh_thu:8672000},
+    {ten:"Bánh Chocolate Berry",nhom:"Bánh Kem Nhỏ",da_ban:112,doanh_thu:9540000},
+    {ten:"Donut Chocolate",nhom:"Bánh Mì",da_ban:109,doanh_thu:4344000}
+  ]},
+  "TimesCity": {icon:"🏬", items:[
+    {ten:"Whipping Caramel",nhom:"Bánh Kem Nhỏ",da_ban:427,doanh_thu:8306000},
+    {ten:"Bánh Tiramisu",nhom:"Bánh Kem Nhỏ",da_ban:157,doanh_thu:11747000},
+    {ten:"Bánh Mì Gối Trắng",nhom:"Bánh Mì",da_ban:154,doanh_thu:7500000},
+    {ten:"Su Giòn Pudding Dâu Tây",nhom:"Bánh Kem Nhỏ",da_ban:123,doanh_thu:7566000},
+    {ten:"Bánh Kem Xoài Dừa",nhom:"Bánh Kem Nhỏ",da_ban:120,doanh_thu:8978000},
+    {ten:"Bánh Hoa Quả Tươi",nhom:"Bánh Kem Nhỏ",da_ban:115,doanh_thu:8744000},
+    {ten:"Bánh Mì Ruốc Heo",nhom:"Bánh Mì",da_ban:114,doanh_thu:4256000},
+    {ten:"Su Giòn Pudding Cà Phê Caramel Muối",nhom:"Bánh Kem Nhỏ",da_ban:106,doanh_thu:7154000},
+    {ten:"Bánh Mì Gối Hạt Nảy Mầm",nhom:"Bánh Mì",da_ban:100,doanh_thu:6692000},
+    {ten:"Bánh Chocolate Berry",nhom:"Bánh Kem Nhỏ",da_ban:98,doanh_thu:8379000}
+  ]},
+  "Phan Bội Châu": {icon:"🏪", items:[
+    {ten:"Whipping Caramel",nhom:"Bánh Kem Nhỏ",da_ban:166,doanh_thu:3148000},
+    {ten:"Bánh Tiramisu",nhom:"Bánh Kem Nhỏ",da_ban:130,doanh_thu:10104000},
+    {ten:"Bánh Hoa Quả Tươi",nhom:"Bánh Kem Nhỏ",da_ban:80,doanh_thu:6176000},
+    {ten:"Bánh Triple Chocolate",nhom:"Bánh Kem Nhỏ",da_ban:78,doanh_thu:4992000},
+    {ten:"Bánh Chocolate Berry",nhom:"Bánh Kem Nhỏ",da_ban:73,doanh_thu:6282000},
+    {ten:"Bánh Sữa Chua Dâu",nhom:"Bánh Kem Nhỏ",da_ban:71,doanh_thu:5470000},
+    {ten:"Bánh Kem Xoài Dừa",nhom:"Bánh Kem Nhỏ",da_ban:68,doanh_thu:5184000},
+    {ten:"Ngàn Lớp Socola",nhom:"Bánh Mì",da_ban:67,doanh_thu:3280000},
+    {ten:"Su Giòn Pudding Dâu Tây",nhom:"Bánh Kem Nhỏ",da_ban:57,doanh_thu:3627000},
+    {ten:"Su Giòn Pudding Cà Phê Caramel Muối",nhom:"Bánh Kem Nhỏ",da_ban:55,doanh_thu:3752000}
+  ]},
+  "Trung Hòa": {icon:"🏠", items:[
+    {ten:"Whipping Caramel",nhom:"Bánh Kem Nhỏ",da_ban:476,doanh_thu:9055000},
+    {ten:"Bánh Tiramisu",nhom:"Bánh Kem Nhỏ",da_ban:155,doanh_thu:11737600},
+    {ten:"Su Giòn Pudding Dâu Tây",nhom:"Bánh Kem Nhỏ",da_ban:146,doanh_thu:9249500},
+    {ten:"Bánh Hoa Quả Tươi",nhom:"Bánh Kem Nhỏ",da_ban:145,doanh_thu:11032000},
+    {ten:"Bánh Kem Xoài Dừa",nhom:"Bánh Kem Nhỏ",da_ban:139,doanh_thu:10568000},
+    {ten:"Su Giòn Pudding Cà Phê Caramel Muối",nhom:"Bánh Kem Nhỏ",da_ban:124,doanh_thu:8414000},
+    {ten:"Bánh Sữa Chua Nướng",nhom:"Bánh Kem Nhỏ",da_ban:123,doanh_thu:5890000},
+    {ten:"Bánh Chocolate Berry",nhom:"Bánh Kem Nhỏ",da_ban:99,doanhu_thu:8388000},
+    {ten:"Bánh Triple Chocolate",nhom:"Bánh Kem Nhỏ",da_ban:97,doanh_thu:6084000},
+    {ten:"Bánh Sữa Chua Dâu",nhom:"Bánh Kem Nhỏ",da_ban:96,doanh_thu:7216000}
+  ]}
+};
+function renderBanChay() {
+  const grid = document.getElementById('bc-grid');
+  if (!grid || grid.dataset.rendered) return;
+  grid.dataset.rendered = '1';
+  let html = '';
+  for (const [store, data] of Object.entries(BC_DATA)) {
+    const max = data.items[0].da_ban;
+    const totalSold = data.items.reduce((s,p)=>s+p.da_ban,0);
+    const totalRev = data.items.reduce((s,p)=>s+(p.doanh_thu||0),0);
+    const rows = data.items.map((p,i)=>{
+      const cls = i===0?'bc-n1':i===1?'bc-n2':i===2?'bc-n3':'bc-nx';
+      const bar = Math.round(p.da_ban/max*100);
+      const rev = (p.doanh_thu/1000000).toFixed(1);
+      return `<div class="bc-row">
+        <div class="bc-num ${cls}">${i+1}</div>
+        <div class="bc-info">
+          <div class="bc-pname" title="${p.ten}">${p.ten}</div>
+          <div class="bc-pcat">${p.nhom}</div>
+          <div class="bc-bar-w"><div class="bc-bar-f" style="width:${bar}%"></div></div>
+        </div>
+        <div class="bc-right">
+          <div class="bc-qty">${p.da_ban.toLocaleString()}</div>
+          <div class="bc-qlbl">chiếc/hộp</div>
+          <div class="bc-rev">${rev} tr đ</div>
+        </div>
+      </div>`;
+    }).join('');
+    html += `<div class="bc-card">
+      <div class="bc-head">
+        <div class="bc-head-icon">${data.icon}</div>
+        <div>
+          <div class="bc-head-name">${store}</div>
+          <div class="bc-head-sub">Top 10 · ${totalSold.toLocaleString()} sp · ${(totalRev/1000000).toFixed(0)} tr đ</div>
+        </div>
+      </div>
+      <div class="bc-body">${rows}</div>
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+  const panel = document.getElementById('tab-' + tabId);
+  if (panel) panel.style.display = 'block';
+  document.querySelectorAll('.tbn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+  if (tabId === 'banchayt4') renderBanChay();
+}
+document.querySelectorAll('.tbn[data-tab], .sb-item[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+</script>
+</body>
+</html>

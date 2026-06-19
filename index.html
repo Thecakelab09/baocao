@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cake Lab — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f0e11; --surface:#1a1820; --surface2:#231f2e;
+  --border:rgba(255,255,255,0.07);
+  --accent:#f5c842; --accent2:#ff8c5a; --accent3:#7ee8a2; --accent4:#60c4f7;
+  --red:#ff5c5c; --text:#f0ecff; --muted:#8b879d; --radius:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(15,14,17,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:56px;box-shadow:0 2px 20px rgba(0,0,0,.4)}
+.nav-logo{display:flex;align-items:center;gap:12px}
+.nav-icon{width:34px;height:34px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.nav-name{font-family:'Fraunces',serif;font-size:19px;color:var(--text)}
+.nav-tag{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:1px}
+.nav-r{display:flex;align-items:center;gap:12px}
+.nav-time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.05em}
+.live-dot{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--accent3)}
+.live-dot::before{content:'';width:6px;height:6px;background:var(--accent3);border-radius:50%;animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;border:none;background:none;border-radius:8px}
+.hamburger span{width:20px;height:2px;background:var(--muted);border-radius:2px;transition:all .25s}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+
+/* MOBILE MENU */
+.mobile-menu{display:none;position:fixed;inset:0;top:56px;background:rgba(15,14,17,.98);backdrop-filter:blur(12px);z-index:99;padding:20px 16px;flex-direction:column;gap:6px;overflow-y:auto}
+.mobile-menu.open{display:flex}
+.mm-link{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:11px;text-decoration:none;color:var(--text);font-size:14px;font-weight:500;border:1px solid var(--border);transition:background .15s}
+.mm-link:hover,.mm-link:active{background:var(--surface)}
+.mm-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.mm-sub{font-size:11px;color:var(--muted);margin-top:1px;font-weight:400}
+.mm-sep{height:1px;background:var(--border);margin:6px 0}
+
+/* HERO */
+.hero{background:linear-gradient(150deg,#1a1624 0%,#0f0e11 60%,#151220 100%);padding:52px 44px 48px;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:400px;height:400px;background:radial-gradient(circle,rgba(245,200,66,.08) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'🎂';position:absolute;right:-10px;top:-20px;font-size:240px;opacity:.03;pointer-events:none}
+.hero-eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.hero-title{font-family:'Fraunces',serif;font-size:42px;font-weight:300;color:var(--text);line-height:1.1;margin-bottom:8px}
+.hero-title em{font-style:italic;color:var(--accent)}
+.hero-sub{font-size:13.5px;color:var(--muted);max-width:480px;line-height:1.7}
+.hero-kpi{display:flex;gap:28px;margin-top:32px;flex-wrap:wrap}
+.hkpi{border-left:2px solid rgba(245,200,66,.3);padding-left:14px}
+.hkpi-v{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--text);line-height:1}
+.hkpi-l{font-size:10.5px;color:var(--muted);margin-top:4px;letter-spacing:.04em}
+
+/* MAIN */
+.page{position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:44px 24px 80px}
+
+/* SECTION HEADER */
+.sh{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.sh-line{flex:1;height:1px;background:var(--border)}
+.sh-label{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap;padding:0 4px}
+
+/* MODULE CARDS */
+.mod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:36px}
+.mod-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s,border-color .2s;position:relative}
+.mod-card:hover{transform:translateY(-3px);box-shadow:0 10px 36px rgba(0,0,0,.4);border-color:rgba(245,200,66,.3)}
+.mod-card:hover .mod-arrow{transform:translate(2px,-2px)}
+.mod-top{padding:20px 20px 14px;flex:1}
+.mod-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.mod-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.mod-arrow{font-size:15px;color:var(--muted);transition:transform .2s;margin-top:2px}
+.mod-num{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.mod-title{font-family:'Fraunces',serif;font-size:19px;font-weight:300;color:var(--text);line-height:1.2;margin-bottom:5px}
+.mod-desc{font-size:12px;color:var(--muted);line-height:1.6}
+.mod-tags{display:flex;gap:5px;flex-wrap:wrap;padding:12px 20px;border-top:1px solid var(--border);background:var(--surface2)}
+.tag{font-size:10.5px;font-weight:500;color:var(--muted);background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;padding:2px 9px}
+.ico-yellow{background:rgba(245,200,66,.12)}
+.ico-pink{background:rgba(255,140,90,.12)}
+.ico-green{background:rgba(126,232,162,.12)}
+.ico-blue{background:rgba(96,196,247,.12)}
+
+/* MODULE CARD NO LINK (has inner buttons) */
+.mod-card-div{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+.month-btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.month-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;text-decoration:none;font-size:12px;font-weight:600;transition:all .15s}
+.month-btn-t4{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted)}
+.month-btn-t4:hover{background:rgba(255,255,255,.1);color:var(--text)}
+.month-btn-t5{background:rgba(245,200,66,.15);border:1px solid rgba(245,200,66,.4);color:var(--accent)}
+.month-btn-t5:hover{background:rgba(245,200,66,.25)}
+.month-btn-t6{background:rgba(126,232,162,.15);border:1px solid rgba(126,232,162,.4);color:var(--accent3)}
+.month-btn-t6:hover{background:rgba(126,232,162,.25)}
+
+/* STORE STRIP */
+.store-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:36px}
+.store-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 16px 13px;transition:transform .15s,box-shadow .15s}
+.store-card:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.3)}
+.store-ico{font-size:20px;margin-bottom:8px}
+.store-name{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:2px}
+.store-addr{font-size:10.5px;color:var(--muted);margin-bottom:8px}
+.store-val{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--text)}
+.store-lbl{font-size:10.5px;color:var(--muted);margin-top:2px}
+.store-bar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:10px;overflow:hidden}
+.store-bar-f{height:3px;border-radius:2px;background:var(--accent)}
+
+/* QUICK LINKS */
+.ql-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.ql-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;text-decoration:none;display:flex;align-items:center;gap:12px;transition:transform .15s,border-color .15s}
+.ql-card:hover{transform:translateY(-2px);border-color:rgba(245,200,66,.3)}
+.ql-ico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ql-name{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:2px}
+.ql-sub{font-size:11px;color:var(--muted)}
+.ql-arr{margin-left:auto;font-size:16px;color:var(--muted)}
+
+/* FOOTER */
+footer{background:var(--surface2);padding:22px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-top:1px solid var(--border)}
+.ft-left{font-family:'Fraunces',serif;font-size:15px;color:var(--muted)}
+.ft-right{font-size:11px;color:rgba(255,255,255,.2)}
+
+/* FADE */
+.fade-in{opacity:0;transform:translateY(14px);animation:fadein .5s ease forwards}
+@keyframes fadein{to{opacity:1;transform:none}}
+.d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}
+.d4{animation-delay:.2s}.d5{animation-delay:.25s}.d6{animation-delay:.3s}
+.d7{animation-delay:.35s}.d8{animation-delay:.4s}
+
+/* RESPONSIVE */
+@media(max-width:900px){.mod-grid{grid-template-columns:repeat(2,1fr)}.store-grid{grid-template-columns:repeat(2,1fr)}.hero{padding:36px 24px 40px}.hero-title{font-size:32px}.page{padding:32px 18px 60px}}
+@media(max-width:600px){
+  .nav{padding:0 14px;height:52px}
+  .nav-tag,.live-dot,.nav-time{display:none}
+  .hamburger{display:flex}
+  .hero{padding:26px 16px 30px}.hero::after{font-size:130px}.hero-title{font-size:26px}
+  .hero-sub{font-size:12.5px}.hero-kpi{gap:18px;margin-top:20px}.hkpi-v{font-size:22px}
+  .page{padding:18px 14px 44px}
+  .mod-grid{grid-template-columns:1fr;gap:10px}
+  .store-grid{grid-template-columns:repeat(2,1fr);gap:9px}
+  .ql-grid{grid-template-columns:1fr;gap:9px}
+  .mod-card{flex-direction:row;border-radius:12px}
+  .mod-top{display:flex;align-items:center;gap:12px;padding:14px;flex:1}
+  .mod-head{margin-bottom:0;flex-direction:column;gap:0;align-items:flex-start}
+  .mod-arrow,.mod-desc,.mod-tags{display:none}
+  .mod-num{font-size:9px;margin-bottom:2px}.mod-title{font-size:14px;margin-bottom:0}
+  .store-card{padding:12px 12px 10px}.store-ico{font-size:17px;margin-bottom:5px}
+  .store-name{font-size:11.5px}.store-val{font-size:17px}
+  .ql-card{padding:12px 14px}.ql-name{font-size:12.5px}
+  footer{padding:14px 16px;flex-direction:column;text-align:center}
+  .ft-right{display:none}.sh{margin-bottom:12px}
+}
+
+/* COMMAND CENTER CARD */
+.command-card{background:linear-gradient(135deg,#1a1624 0%,#1f1a2e 100%);border:1px solid rgba(245,200,66,.25);border-radius:var(--radius);padding:0;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s,border-color .2s;position:relative;grid-column:1/-1}
+.command-card:hover{transform:translateY(-3px);box-shadow:0 10px 40px rgba(245,200,66,.12);border-color:rgba(245,200,66,.5)}
+.command-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3))}
+.command-inner{display:flex;align-items:center;gap:20px;padding:20px 24px}
+.command-ico{width:52px;height:52px;border-radius:13px;background:rgba(245,200,66,.12);border:1px solid rgba(245,200,66,.25);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.command-body{flex:1}
+.command-label{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.command-title{font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:var(--text);margin-bottom:4px}
+.command-title em{font-style:italic;color:var(--accent)}
+.command-desc{font-size:12px;color:var(--muted);line-height:1.6}
+.command-arrow{font-size:22px;color:var(--accent);margin-left:auto;flex-shrink:0;transition:transform .2s}
+.command-card:hover .command-arrow{transform:translate(3px,-3px)}
+.command-chips{display:flex;gap:6px;padding:12px 24px;border-top:1px solid rgba(245,200,66,.1);background:rgba(245,200,66,.03)}
+.command-chip{padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:600;background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.2);color:var(--accent)}
+</style>
+</head>
+<body>
+<script>
+(function(){
+  var raw = sessionStorage.getItem('tcl_user');
+  if (!raw) { window.location.replace('login.html'); return; }
+  var user = JSON.parse(raw);
+  if (user.role !== 'bgd') { window.location.replace('login.html'); return; }
+  window._tclUser = user;
+  document.addEventListener('DOMContentLoaded', function(){
+    var el = document.getElementById('navUser');
+    if (el) el.textContent = user.name;
+  });
+})();
+</script>
+
+
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-icon">🎂</div>
+    <div>
+      <div class="nav-name">The Cake Lab</div>
+      <div class="nav-tag">Dashboard System · Hà Nội</div>
+    </div>
+  </div>
+  <div class="nav-r"><span id="navUser" style="font-size:12px;color:var(--muted)"></span><button onclick="(function(){sessionStorage.removeItem('tcl_user');window.location.href='login.html';})()" style="padding:5px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#8b879d;font-size:12px;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;margin-left:4px" onmouseover="this.style.color='#ff5c5c'" onmouseout="this.style.color='#8b879d'">Đăng xuất</button>
+    <div class="live-dot">Live</div>
+    <div class="nav-time" id="clock">--:--:--</div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="mm-link" href="M3_SanPham.html" onclick="closeMenu()">
+    <div class="mm-ico ico-yellow">📦</div>
+    <div><div>Danh Mục Sản Phẩm</div><div class="mm-sub">94 sản phẩm · live từ Sheets</div></div>
+  </a>
+  <a class="mm-link" href="index3.html" onclick="closeMenu()">
+    <div class="mm-ico ico-pink">📊</div>
+    <div><div>Dashboard Tháng 4</div><div class="mm-sub">KPI · doanh thu · bán chạy</div></div>
+  </a>
+  <a class="mm-link" href="dashboard_t5.html" onclick="closeMenu()">
+    <div class="mm-ico" style="background:rgba(245,200,66,.12)">🆕</div>
+    <div><div>Dashboard Tháng 5</div><div class="mm-sub">Báo cáo mới nhất · T5/2026</div></div>
+  </a>
+  <a class="mm-link" href="dashboard_t6.html" onclick="closeMenu()">
+    <div class="mm-ico" style="background:rgba(126,232,162,.12)">🟢</div>
+    <div><div>Dashboard Tháng 6</div><div class="mm-sub">Live · Google Sheets · T6/2026</div></div>
+  </a>
+  <a class="mm-link" href="doanh_so_online.html" onclick="closeMenu()">
+    <div class="mm-ico ico-green">🛒</div>
+    <div><div>Doanh Số Online</div><div class="mm-sub">Upload Fabi iPOS</div></div>
+  </a>
+  <div class="mm-sep"></div>
+  <a class="mm-link" href="index3.html#banchayt4" onclick="closeMenu()">
+    <div class="mm-ico" style="background:rgba(255,140,90,.12)">🔥</div>
+    <div><div>Bán Chạy T4</div><div class="mm-sub">Top 10 theo cửa hàng</div></div>
+  </a>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">The Cake Lab · Hệ thống quản lý nội bộ</div>
+  <h1 class="hero-title">Chain Dashboard<br><em>Bánh & Doanh Số</em></h1>
+  <p class="hero-sub">Theo dõi sản phẩm, doanh thu, bán chạy và vận hành toàn chuỗi The Cake Lab. Dữ liệu đồng bộ từ Fabi iPOS & Google Sheets.</p>
+  <div class="hero-kpi">
+    <div class="hkpi"><div class="hkpi-v">4</div><div class="hkpi-l">Cửa hàng</div></div>
+    <div class="hkpi"><div class="hkpi-v">94</div><div class="hkpi-l">Sản phẩm</div></div>
+    <div class="hkpi"><div class="hkpi-v">T5/2026</div><div class="hkpi-l">Kỳ hiện tại</div></div>
+    <div class="hkpi"><div class="hkpi-v">5</div><div class="hkpi-l">Danh mục</div></div>
+  </div>
+</div>
+
+<div class="page">
+
+
+  <div class="sh fade-in d1" style="margin-bottom:16px">
+    <div class="sh-label">⚡ Command Center</div>
+    <div class="sh-line"></div>
+  </div>
+  <div class="mod-grid" style="margin-bottom:16px">
+    <a class="command-card fade-in d1" href="command.html">
+      <div class="command-inner">
+        <div class="command-ico">⚡</div>
+        <div class="command-body">
+          <div class="command-label">T1 · Đòn Bẩy · Live</div>
+          <div class="command-title">Command <em>Center</em></div>
+          <div class="command-desc">Mở ra là thấy ngay — DT online vs KPI, tỷ lệ chốt, TB/ngày cần đạt, BSN từng CH và hành động cụ thể cho hôm nay.</div>
+        </div>
+        <div class="command-arrow">↗</div>
+      </div>
+      <div class="command-chips">
+        <span class="command-chip">🌐 Online Live</span>
+        <span class="command-chip">📊 Tỷ lệ chốt</span>
+        <span class="command-chip">🎂 BSN</span>
+        <span class="command-chip">⚡ Hành động</span>
+        <span class="command-chip">🏪 4 cửa hàng</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="sh fade-in d2"><div class="sh-label">T2 · Báo cáo & Phân tích</div><div class="sh-line"></div></div>
+
+  <div class="mod-grid">
+
+    <a class="mod-card fade-in d2" href="M3_SanPham.html">
+      <div class="mod-top">
+        <div class="mod-head"><div class="mod-ico ico-yellow">📦</div><div class="mod-arrow">↗</div></div>
+        <div class="mod-num">Module 1</div>
+        <div class="mod-title">Danh Mục Sản Phẩm</div>
+        <div class="mod-desc">94 sản phẩm trên 5 danh mục. Tìm kiếm, lọc, xem thành phần, giá, HSD và ảnh từng món.</div>
+      </div>
+      <div class="mod-tags"><span class="tag">Bánh Daily</span><span class="tag">Sinh Nhật</span><span class="tag">Cookie</span><span class="tag">Keto</span></div>
+    </a>
+
+    <div class="mod-card-div fade-in d3">
+      <div class="mod-top">
+        <div class="mod-head"><div class="mod-ico ico-pink">📊</div></div>
+        <div class="mod-num">Module 2</div>
+        <div class="mod-title">Dashboard Tháng</div>
+        <div class="mod-desc">Báo cáo doanh thu theo từng cửa hàng. KPI completion, bán chạy, chẩn đoán.</div>
+        <div class="month-btns">
+          <a class="month-btn month-btn-t4" href="index3.html">📅 Tháng 4 ↗</a>
+          <a class="month-btn month-btn-t5" href="dashboard_t5.html">📅 Tháng 5 ↗</a>
+          <a class="month-btn month-btn-t6" href="dashboard_t6.html">🟢 Tháng 6 · Live ↗</a>
+        </div>
+      </div>
+      <div class="mod-tags"><span class="tag">Doanh thu</span><span class="tag">KPI</span><span class="tag">Bán chạy</span></div>
+    </div>
+
+    <a class="mod-card fade-in d4" href="doanh_so_online.html">
+      <div class="mod-top">
+        <div class="mod-head"><div class="mod-ico ico-green">🛒</div><div class="mod-arrow">↗</div></div>
+        <div class="mod-num">Module 3</div>
+        <div class="mod-title">Doanh Số Online</div>
+        <div class="mod-desc">Upload file Fabi iPOS mỗi ngày. Tự động parse & tích lũy theo sản phẩm, nhóm, cửa hàng.</div>
+      </div>
+      <div class="mod-tags"><span class="tag">Fabi iPOS</span><span class="tag">Theo ngày</span><span class="tag">Theo nhóm</span></div>
+    </a>
+
+  </div>
+
+  <div class="sh fade-in d5"><div class="sh-label">4 Cửa hàng · KPI T5/2026</div><div class="sh-line"></div></div>
+
+  <div class="store-grid">
+    <div class="store-card fade-in d5">
+      <div class="store-ico">🌿</div>
+      <div class="store-name">Tuệ Tĩnh</div>
+      <div class="store-addr">CS1 · 45 Tuệ Tĩnh</div>
+      <div class="store-val">289,9 tr</div>
+      <div class="store-lbl">T5 · MT: 310 tr · 94%</div>
+      <div class="store-bar"><div class="store-bar-f" style="width:94%"></div></div>
+    </div>
+    <div class="store-card fade-in d5">
+      <div class="store-ico">🏬</div>
+      <div class="store-name">TimesCity</div>
+      <div class="store-addr">CS2 · Park 7 TimesCity</div>
+      <div class="store-val">276,5 tr</div>
+      <div class="store-lbl">T5 · MT: 322 tr · 86%</div>
+      <div class="store-bar"><div class="store-bar-f" style="width:86%"></div></div>
+    </div>
+    <div class="store-card fade-in d6">
+      <div class="store-ico">🏪</div>
+      <div class="store-name">Phan Bội Châu</div>
+      <div class="store-addr">CS3 · 3A Phan Bội Châu</div>
+      <div class="store-val">109,2 tr</div>
+      <div class="store-lbl">T5 · MT: 167 tr · 65% ⚠️</div>
+      <div class="store-bar"><div class="store-bar-f" style="width:65%;background:var(--red)"></div></div>
+    </div>
+    <div class="store-card fade-in d6">
+      <div class="store-ico">🏠</div>
+      <div class="store-name">Trung Hòa</div>
+      <div class="store-addr">CS4 · 26 Trung Hòa</div>
+      <div class="store-val">248,5 tr</div>
+      <div class="store-lbl">T5 · MT: 318 tr · 78%</div>
+      <div class="store-bar"><div class="store-bar-f" style="width:78%"></div></div>
+    </div>
+  </div>
+
+  <div class="sh fade-in d7"><div class="sh-label">Công cụ & Tiện ích</div><div class="sh-line"></div></div>
+
+  <div class="ql-grid fade-in d7">
+    <a class="ql-card" href="doanh_so_online.html">
+      <div class="ql-ico ico-yellow">📂</div>
+      <div><div class="ql-name">Upload Fabi hôm nay</div><div class="ql-sub">Kéo thả items_report.xlsx để cập nhật doanh số</div></div>
+      <div class="ql-arr">→</div>
+    </a>
+    <a class="ql-card" href="M3_SanPham.html">
+      <div class="ql-ico ico-pink">🔍</div>
+      <div><div class="ql-name">Tra cứu sản phẩm</div><div class="ql-sub">Tìm kiếm thành phần, giá, HSD theo tên hoặc mã SP</div></div>
+      <div class="ql-arr">→</div>
+    </a>
+    <a class="ql-card" href="index3.html#banchayt4">
+      <div class="ql-ico ico-green">🔥</div>
+      <div><div class="ql-name">Bán chạy tháng 4</div><div class="ql-sub">Top 10 sản phẩm theo từng cửa hàng</div></div>
+      <div class="ql-arr">→</div>
+    </a>
+    <a class="ql-card" href="dashboard_t6.html">
+      <div class="ql-ico" style="background:rgba(126,232,162,.12)">🟢</div>
+      <div><div class="ql-name">Dashboard tháng 6 · Live</div><div class="ql-sub">Kéo trực tiếp từ Google Sheets · T6/2026</div></div>
+      <div class="ql-arr">→</div>
+    </a>
+  </div>
+
+</div>
+
+<footer>
+  <div class="ft-left">The Cake Lab · Chain Dashboard v1.0 · 2026</div>
+  <div class="ft-right">Powered by Fabi iPOS · Vercel</div>
+</footer>
+
+<script>
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+tick();setInterval(tick,1000);
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+  document.body.style.overflow=document.getElementById('mobile-menu').classList.contains('open')?'hidden':'';
+}
+function closeMenu(){
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('mobile-menu').classList.remove('open');
+  document.body.style.overflow='';
+}
+</script>
+</body>
+</html>
