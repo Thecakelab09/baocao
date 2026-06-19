@@ -1100,54 +1100,9 @@ function renderKHReturnDaily() {
         '</div>'
       );
     }
-    var yd = Math.max(1, TODAY_DAY - 1);
-    var mm = ('0'+THANG).slice(-2);
-    var ydIt = (ITEMS_DIST_DATA.byDay[s.key] && ITEMS_DIST_DATA.byDay[s.key][String(yd)]) || null;
-    var itemSummaryHtml = '';
-    if (ydIt && ydIt.tong > 0) {
-      var pG1 = Math.round(ydIt.g1/ydIt.tong*100);
-      var pG2 = Math.round(ydIt.g2/ydIt.tong*100);
-      var pG3 = Math.round(ydIt.g3/ydIt.tong*100);
-      itemSummaryHtml =
-        '<div style="padding:14px 14px 16px;background:rgba(255,255,255,.03);border-top:2px solid '+s.color+'">' +
-          '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:'+s.color+';margin-bottom:12px">🛒 Số item/đơn ngày hôm qua · '+yd+'/'+mm+'</div>' +
-          '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">' +
-            '<div style="background:var(--s2);border:1px solid var(--border2);border-radius:12px;padding:14px 6px;text-align:center">' +
-              '<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:600">Ngày</div>' +
-              '<div style="font-size:18px;font-weight:800;color:'+s.color+'">'+yd+'/'+mm+'</div>' +
-            '</div>' +
-            '<div style="background:var(--s2);border:2px solid '+s.color+';border-radius:12px;padding:14px 6px;text-align:center">' +
-              '<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:600">TB/đơn</div>' +
-              '<div style="font-size:26px;font-weight:800;color:'+s.color+'">'+ydIt.tbItems+'</div>' +
-            '</div>' +
-            '<div style="background:var(--s2);border:1px solid var(--border2);border-radius:12px;padding:14px 6px;text-align:center">' +
-              '<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:600">Tổng</div>' +
-              '<div style="font-size:26px;font-weight:800;color:var(--text)">'+ydIt.tong+'</div>' +
-              '<div style="font-size:10px;color:var(--muted);margin-top:3px">đơn</div>' +
-            '</div>' +
-            '<div style="background:rgba(126,232,162,.06);border:1px solid rgba(126,232,162,.2);border-radius:12px;padding:14px 6px;text-align:center">' +
-              '<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:600">1 item</div>' +
-              '<div style="font-size:26px;font-weight:800;color:var(--green)">'+ydIt.g1+'</div>' +
-              '<div style="font-size:11px;color:var(--green);font-weight:700;margin-top:3px">'+pG1+'%</div>' +
-            '</div>' +
-            '<div style="background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:12px;padding:14px 6px;text-align:center">' +
-              '<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:600">2 items</div>' +
-              '<div style="font-size:26px;font-weight:800;color:var(--accent)">'+ydIt.g2+'</div>' +
-              '<div style="font-size:11px;color:var(--accent);font-weight:700;margin-top:3px">'+pG2+'%</div>' +
-            '</div>' +
-            '<div style="background:rgba(96,196,247,.06);border:1px solid rgba(96,196,247,.2);border-radius:12px;padding:14px 6px;text-align:center">' +
-              '<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:600">3+ items</div>' +
-              '<div style="font-size:26px;font-weight:800;color:var(--blue)">'+ydIt.g3+'</div>' +
-              '<div style="font-size:11px;color:var(--blue);font-weight:700;margin-top:3px">'+pG3+'%</div>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-    }
-
     return '<div class="ch-card store-col" data-store="'+s.key+'" style="margin-bottom:12px;overflow:hidden">' +
       '<div class="ch-head" style="border-left:3px solid '+s.color+'"><div class="ch-name" style="color:'+s.color+'">'+s.label+'</div></div>' +
       (dayRows.length ? (headerRow + dayRows.join('')) : '<div style="padding:14px;font-size:12px;color:var(--dim)">Chưa có dữ liệu</div>') +
-      itemSummaryHtml +
     '</div>';
   }).join('');
 
@@ -1429,6 +1384,48 @@ function renderKhachHang() {
     d.pctCuGt90  = d.donCu > 0 ? Math.round(d.cuGt90/d.donCu*100) : 0;
     d.cuQuayLai  = d.donCu;
     var ktdCls = d.pctKhongTD >= 60 ? 'rc' : d.pctKhongTD >= 40 ? 'wc' : 'gc';
+    var ydKH = Math.max(1, TODAY_DAY - 1);
+    var mmKH = ('0'+THANG).slice(-2);
+    var ydItKH = (ITEMS_DIST_DATA.byDay[s.key] && ITEMS_DIST_DATA.byDay[s.key][String(ydKH)]) || null;
+    var khItemSummary = '';
+    if (ydItKH && ydItKH.tong > 0) {
+      var pG1kh = Math.round(ydItKH.g1/ydItKH.tong*100);
+      var pG2kh = Math.round(ydItKH.g2/ydItKH.tong*100);
+      var pG3kh = Math.round(ydItKH.g3/ydItKH.tong*100);
+      khItemSummary =
+        '<div style="margin-top:10px;padding:12px 0 0">' +
+          '<div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:'+s.color+';margin-bottom:10px">🛒 Số item/đơn hôm qua · '+ydKH+'/'+mmKH+'</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px">' +
+            '<div style="background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:10px 4px;text-align:center">' +
+              '<div style="font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;font-weight:600">Ngày</div>' +
+              '<div style="font-size:15px;font-weight:800;color:'+s.color+'">'+ydKH+'/'+mmKH+'</div>' +
+            '</div>' +
+            '<div style="background:var(--s2);border:2px solid '+s.color+';border-radius:10px;padding:10px 4px;text-align:center">' +
+              '<div style="font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;font-weight:600">TB/đơn</div>' +
+              '<div style="font-size:20px;font-weight:800;color:'+s.color+'">'+ydItKH.tbItems+'</div>' +
+            '</div>' +
+            '<div style="background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:10px 4px;text-align:center">' +
+              '<div style="font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;font-weight:600">Tổng</div>' +
+              '<div style="font-size:20px;font-weight:800;color:var(--text)">'+ydItKH.tong+'</div>' +
+            '</div>' +
+            '<div style="background:rgba(126,232,162,.06);border:1px solid rgba(126,232,162,.2);border-radius:10px;padding:10px 4px;text-align:center">' +
+              '<div style="font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;font-weight:600">1 item</div>' +
+              '<div style="font-size:20px;font-weight:800;color:var(--green)">'+ydItKH.g1+'</div>' +
+              '<div style="font-size:10px;color:var(--green);font-weight:700;margin-top:2px">'+pG1kh+'%</div>' +
+            '</div>' +
+            '<div style="background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:10px;padding:10px 4px;text-align:center">' +
+              '<div style="font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;font-weight:600">2 items</div>' +
+              '<div style="font-size:20px;font-weight:800;color:var(--accent)">'+ydItKH.g2+'</div>' +
+              '<div style="font-size:10px;color:var(--accent);font-weight:700;margin-top:2px">'+pG2kh+'%</div>' +
+            '</div>' +
+            '<div style="background:rgba(96,196,247,.06);border:1px solid rgba(96,196,247,.2);border-radius:10px;padding:10px 4px;text-align:center">' +
+              '<div style="font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;font-weight:600">3+ items</div>' +
+              '<div style="font-size:20px;font-weight:800;color:var(--blue)">'+ydItKH.g3+'</div>' +
+              '<div style="font-size:10px;color:var(--blue);font-weight:700;margin-top:2px">'+pG3kh+'%</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    }
     return '<div class="ch-card store-col" data-store="'+s.key+'">' +
       '<div class="ch-head" style="border-left:3px solid '+s.color+'">' +
         '<div class="ch-name" style="color:'+s.color+'">Khách hàng '+s.name+'</div>' +
@@ -1483,6 +1480,7 @@ function renderKhachHang() {
               '<div style="font-size:10px;color:var(--accent)">'+d.pctCuGt90+'%</div>' +
             '</div>' +
           '</div>' +
+          khItemSummary +
         '</div>' +
       '</div>' +
     '</div>';
