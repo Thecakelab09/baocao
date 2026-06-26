@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cake Lab — Đăng nhập</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0e11;
+  --surface: #1a1820;
+  --surface2: #231f2e;
+  --border: rgba(255,255,255,0.07);
+  --accent: #f5c842;
+  --accent3: #7ee8a2;
+  --red: #ff5c5c;
+  --text: #f0ecff;
+  --muted: #8b879d;
+  --radius: 14px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* BACKGROUND EFFECTS */
+.bg-orb {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+  opacity: 0.18;
+}
+.bg-orb-1 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, #f5c842, transparent 70%);
+  top: -150px; left: -150px;
+  animation: drift1 12s ease-in-out infinite alternate;
+}
+.bg-orb-2 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, #7ee8a2, transparent 70%);
+  bottom: -100px; right: -100px;
+  animation: drift2 15s ease-in-out infinite alternate;
+}
+.bg-orb-3 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, #60c4f7, transparent 70%);
+  top: 50%; left: 60%;
+  opacity: 0.1;
+  animation: drift3 18s ease-in-out infinite alternate;
+}
+@keyframes drift1 { from { transform: translate(0,0) scale(1); } to { transform: translate(40px, 60px) scale(1.1); } }
+@keyframes drift2 { from { transform: translate(0,0) scale(1); } to { transform: translate(-40px, -40px) scale(1.08); } }
+@keyframes drift3 { from { transform: translate(0,0); } to { transform: translate(-60px, 40px); } }
+
+/* GRID TEXTURE */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* MAIN CARD */
+.login-wrap {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+  animation: fadeUp .6s cubic-bezier(.16,1,.3,1) forwards;
+  opacity: 0;
+  transform: translateY(24px);
+}
+@keyframes fadeUp { to { opacity: 1; transform: none; } }
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 22px;
+  padding: 40px 36px 36px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.04) inset;
+  position: relative;
+  overflow: hidden;
+}
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.7;
+}
+
+/* LOGO */
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.logo-icon {
+  width: 44px; height: 44px;
+  background: var(--accent);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(245,200,66,.3);
+}
+.logo-text {}
+.logo-name {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--text);
+  line-height: 1;
+}
+.logo-sub {
+  font-size: 10.5px;
+  color: var(--muted);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+/* HEADING */
+.login-title {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 300;
+  color: var(--text);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+.login-title em { font-style: italic; color: var(--accent); }
+.login-desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+/* FORM */
+.field {
+  margin-bottom: 16px;
+}
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.field input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: 'Be Vietnam Pro', sans-serif;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.field input::placeholder { color: var(--muted); opacity: .6; }
+.field input:focus {
+  border-color: rgba(245,200,66,.5);
+  box-shadow: 0 0 0 3px rgba(245,200,66,.08);
+}
+.field input.error {
+  border-color: rgba(255,92,92,.5);
+  box-shadow: 0 0 0 3px rgba(255,92,92,.06);
+}
+
+/* PASSWORD WRAPPER */
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 44px; }
+.pw-toggle {
+  position: absolute;
+  right: 14px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--muted);
+  transition: color .15s;
+  padding: 4px;
+  line-height: 1;
+}
+.pw-toggle:hover { color: var(--text); }
+
+/* ERROR MESSAGE */
+.error-msg {
+  display: none;
+  background: rgba(255,92,92,.1);
+  border: 1px solid rgba(255,92,92,.25);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 12.5px;
+  color: #ff8a8a;
+  margin-bottom: 16px;
+  align-items: center;
+  gap: 8px;
+}
+.error-msg.show { display: flex; }
+
+/* LOGIN BUTTON */
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  color: #1a1400;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  cursor: pointer;
+  transition: background .2s, transform .15s, box-shadow .2s;
+  margin-top: 4px;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: .02em;
+}
+.btn-login:hover {
+  background: #f7d060;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(245,200,66,.3);
+}
+.btn-login:active { transform: translateY(0); }
+.btn-login.loading { pointer-events: none; opacity: .7; }
+.btn-login .btn-spinner {
+  display: none;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(0,0,0,.2);
+  border-top-color: #1a1400;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  margin: 0 auto;
+}
+.btn-login.loading .btn-txt { display: none; }
+.btn-login.loading .btn-spinner { display: block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* DIVIDER */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 20px;
+}
+.divider-line { flex: 1; height: 1px; background: var(--border); }
+.divider-txt { font-size: 10.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+
+/* ROLE BADGES */
+.roles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.role-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.03);
+  color: var(--muted);
+}
+.role-badge.bgd { border-color: rgba(245,200,66,.3); color: var(--accent); background: rgba(245,200,66,.06); }
+.role-badge.qlch { border-color: rgba(126,232,162,.3); color: var(--accent3); background: rgba(126,232,162,.06); }
+
+/* FOOTER */
+.login-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 11px;
+  color: rgba(255,255,255,.15);
+  letter-spacing: .04em;
+}
+
+/* SUCCESS OVERLAY */
+.success-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+.success-overlay.show { display: flex; animation: fadeIn .4s ease forwards; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.success-icon { font-size: 48px; animation: popIn .5s cubic-bezier(.34,1.56,.64,1) forwards; }
+@keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.success-name {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--text);
+}
+.success-role {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.success-bar {
+  width: 200px; height: 3px;
+  background: var(--surface2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.success-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  animation: loadBar 1.2s ease forwards;
+}
+@keyframes loadBar { from { width: 0; } to { width: 100%; } }
+.success-txt { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- BG -->
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon">🎂</div>
+  <div class="success-name" id="successName">Xin chào!</div>
+  <div class="success-role" id="successRole"></div>
+  <div class="success-bar"><div class="success-bar-fill"></div></div>
+  <div class="success-txt">Đang chuyển hướng…</div>
+</div>
+
+<!-- LOGIN CARD -->
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="logo-area">
+      <div class="logo-icon">🎂</div>
+      <div class="logo-text">
+        <div class="logo-name">The Cake Lab</div>
+        <div class="logo-sub">Chain Dashboard · 2026</div>
+      </div>
+    </div>
+
+    <div class="login-title">Đăng <em>nhập</em></div>
+    <div class="login-desc">Hệ thống quản lý nội bộ · Vui lòng đăng nhập để tiếp tục.</div>
+
+    <div class="error-msg" id="errorMsg">
+      <span>⚠️</span>
+      <span id="errorTxt">Tên đăng nhập hoặc mật khẩu không đúng.</span>
+    </div>
+
+    <div class="field">
+      <label for="username">Tên đăng nhập</label>
+      <input type="text" id="username" placeholder="Nhập username…" autocomplete="username" autocapitalize="none">
+    </div>
+
+    <div class="field">
+      <label for="password">Mật khẩu</label>
+      <div class="pw-wrap">
+        <input type="password" id="password" placeholder="Nhập mật khẩu…" autocomplete="current-password">
+        <button class="pw-toggle" id="pwToggle" type="button" title="Hiện/ẩn mật khẩu">👁️</button>
+      </div>
+    </div>
+
+    <button class="btn-login" id="btnLogin" onclick="doLogin()">
+      <span class="btn-txt">Đăng nhập →</span>
+      <div class="btn-spinner"></div>
+    </button>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-txt">Phân quyền</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="roles">
+      <div class="role-badge bgd">👑 Ban Giám Đốc</div>
+      <div class="role-badge qlch">🏪 Quản lý cửa hàng</div>
+      <div class="role-badge qlch">🛒 Khách (Danh mục SP)</div>
+    </div>
+  </div>
+
+  <div class="login-footer">© 2026 The Cake Lab · Hệ thống quản lý nội bộ</div>
+</div>
+
+<script>
+// ─── TÀI KHOẢN ───────────────────────────────────────────────────
+const ACCOUNTS = [
+  {
+    username: 'bgdcakelab',
+    password: 'thecakelab2026@',
+    role: 'bgd',
+    name: 'Ban Giám Đốc',
+    roleLabel: 'Toàn quyền truy cập hệ thống',
+    redirect: 'index.html'
+  },
+  {
+    username: 'qlch',
+    password: 'qlch2026',
+    role: 'qlch',
+    name: 'Quản lý cửa hàng',
+    roleLabel: 'Quản lý cửa hàng · Toàn bộ 4 cửa hàng',
+    redirect: 'command.html'
+  },
+  {
+    username: 'khach',
+    password: 'khach2026',
+    role: 'khach',
+    name: 'Khách',
+    roleLabel: 'Chỉ xem Danh mục sản phẩm',
+    redirect: 'M3_SanPham.html'
+  }
+];
+
+// ─── LOGIN LOGIC ─────────────────────────────────────────────────
+function doLogin() {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  const btn = document.getElementById('btnLogin');
+  const errMsg = document.getElementById('errorMsg');
+
+  // Clear errors
+  errMsg.classList.remove('show');
+  document.getElementById('username').classList.remove('error');
+  document.getElementById('password').classList.remove('error');
+
+  if (!u || !p) {
+    showError('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.');
+    return;
+  }
+
+  // Loading state
+  btn.classList.add('loading');
+
+  setTimeout(() => {
+    const acc = ACCOUNTS.find(a => a.username === u && a.password === p);
+
+    if (!acc) {
+      btn.classList.remove('loading');
+      showError('Tên đăng nhập hoặc mật khẩu không đúng.');
+      document.getElementById('username').classList.add('error');
+      document.getElementById('password').classList.add('error');
+      // Shake animation
+      const card = document.querySelector('.login-card');
+      card.style.animation = 'shake .4s ease';
+      setTimeout(() => card.style.animation = '', 400);
+      return;
+    }
+
+    // Save session to sessionStorage
+    sessionStorage.setItem('tcl_user', JSON.stringify({
+      username: acc.username,
+      role: acc.role,
+      store: acc.store || null,
+      name: acc.name
+    }));
+
+    // Show success
+    document.getElementById('successName', ).textContent = 'Xin chào, ' + acc.name + '!';
+    document.getElementById('successRole').textContent = acc.roleLabel;
+    document.getElementById('successOverlay').classList.add('show');
+
+    // Redirect after bar animation
+    setTimeout(() => {
+      window.location.href = acc.redirect;
+    }, 1400);
+
+  }, 700);
+}
+
+function showError(msg) {
+  document.getElementById('errorTxt').textContent = msg;
+  document.getElementById('errorMsg').classList.add('show');
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// Password toggle
+document.getElementById('pwToggle').addEventListener('click', () => {
+  const inp = document.getElementById('password');
+  const isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  document.getElementById('pwToggle').textContent = isHidden ? '🙈' : '👁️';
+});
+
+// Shake keyframe injected via JS
+const style = document.createElement('style');
+style.textContent = `@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+}`;
+document.head.appendChild(style);
+
+// Auto-focus
+document.getElementById('username').focus();
+</script>
+</body>
+</html>
