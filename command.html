@@ -446,7 +446,6 @@ var MONTH_CONFIG = {
 var ACTIVE_MONTH = 6;
 
 var API_URL = MONTH_CONFIG[ACTIVE_MONTH].url;
-var SELECTED_MONTH = '7'; // tháng đang xem
 var KPI_ONLINE = MONTH_CONFIG[ACTIVE_MONTH].kpiOnline;
 var THANG = ACTIVE_MONTH; var NAM = MONTH_CONFIG[ACTIVE_MONTH].nam; var TONG_NGAY = MONTH_CONFIG[ACTIVE_MONTH].tongNgay;
 var TODAY = new Date();
@@ -847,7 +846,7 @@ function patchDataWithFabi(data) {
 }
 
 function loadData() {
-  fetch(API_URL + '?month=' + SELECTED_MONTH)
+  fetch(API_URL + '?month=' + THANG)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.error) { showError(data.error); return; }
@@ -1339,6 +1338,8 @@ function toggleBanChay(btn) {
 
 // ── OFFLINE TAB ───────────────────────────────────────────────────
 function renderKhachHang() {
+  var el = document.getElementById('heading-month');
+  if (el) el.textContent = THANG;
   var CH_KEYS_ALL = ['tueTinh','timesCity','pbc','trungHoa'];
   var t = { tongDon:0, khCu:0, khCu90:0, khCuGt90:0, khMoi:0, khKhongTD:0 };
   CH_KEYS_ALL.forEach(function(ch) {
@@ -1552,19 +1553,6 @@ function renderKhachHang() {
       '</div>' +
     '</div>';
   }).join('');
-}
-
-function switchMonth(m) {
-  SELECTED_MONTH = m;
-  var el = document.getElementById('heading-month');
-  if (el) el.textContent = m;
-  document.getElementById('btn-t6').style.background = m === '6' ? 'rgba(245,200,66,.12)' : 'transparent';
-  document.getElementById('btn-t6').style.color = m === '6' ? 'var(--accent)' : '#8b879d';
-  document.getElementById('btn-t6').style.borderColor = m === '6' ? 'var(--accent)' : 'rgba(255,255,255,.15)';
-  document.getElementById('btn-t7').style.background = m === '7' ? 'rgba(245,200,66,.12)' : 'transparent';
-  document.getElementById('btn-t7').style.color = m === '7' ? 'var(--accent)' : '#8b879d';
-  document.getElementById('btn-t7').style.borderColor = m === '7' ? 'var(--accent)' : 'rgba(255,255,255,.15)';
-  loadData();
 }
 
 function renderOffline(data) {
@@ -2052,10 +2040,6 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="date-info" id="date-info"></div>
   <button class="refresh-btn" onclick="loadData()" style="margin-left:8px">↺ Làm mới</button>
   <span id="last-update" style="font-size:11px;color:var(--dim)"></span>
-  <div id="month-switcher" style="display:flex;gap:6px;margin-left:12px;border-left:1px solid rgba(255,255,255,.1);padding-left:12px">
-    <button onclick="switchMonth('6')" id="btn-t6" style="padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.15);background:transparent;color:#8b879d;font-size:12px;cursor:pointer;font-family:inherit">T6</button>
-    <button onclick="switchMonth('7')" id="btn-t7" style="padding:4px 12px;border-radius:20px;border:1px solid var(--accent);background:rgba(245,200,66,.12);color:var(--accent);font-size:12px;cursor:pointer;font-family:inherit">T7</button>
-  </div>
 </div>
 
 <div id="multi-month-bar" style="display:none;padding:14px 24px;background:rgba(168,139,250,.08);border-bottom:1px solid var(--border);align-items:center;gap:12px">
@@ -2155,7 +2139,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="sh" style="margin-top:28px"><div class="sh-icon" style="background:rgba(96,196,247,.15)">🧮</div><div class="sh-title">Công thức Doanh thu Offline</div><div class="sh-line"></div><div class="sh-sub">Traffic × Conversion × ASP</div></div>
   <div class="kg" style="grid-template-columns:repeat(4,1fr)" id="cong-thuc-doanh-thu-cards"></div>
 
-  <div class="sh" data-store-scope="all"><div class="sh-icon" style="background:rgba(96,196,247,.15)">👥</div><div class="sh-title">Phân loại khách hàng · Tháng <span id="heading-month">7</span>/2026</div><div class="sh-line"></div><div class="sh-sub">Nguồn: Fabi iPOS</div></div>
+  <div class="sh" data-store-scope="all"><div class="sh-icon" style="background:rgba(96,196,247,.15)">👥</div><div class="sh-title">Phân loại khách hàng · Tháng <span id="heading-month">6</span>/2026</div><div class="sh-line"></div><div class="sh-sub">Nguồn: Fabi iPOS</div></div>
 
   <div class="kg" data-store-scope="all" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px" id="kh-metric-cards"></div>
 
