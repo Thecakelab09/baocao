@@ -533,8 +533,9 @@ function setDateRange(from, to, label) {
   document.querySelectorAll('.date-bar > .date-btns .dbtn').forEach(function(b) { b.classList.remove('active'); });
   var idMap = {'Hom nay':'dbtn-hom-nay','Hom qua':'dbtn-hom-qua','Tuan nay':'dbtn-tuan-nay','Tuan truoc':'dbtn-tuan-truoc','7 ngay':'dbtn-7-ngay','Thang nay':'dbtn-thang-nay'}; var active = document.getElementById(idMap[label] || '');
   if (active) active.classList.add('active');
-  document.getElementById('di-from').value = '2026-06-' + ('0'+from).slice(-2);
-  document.getElementById('di-to').value = '2026-06-' + ('0'+to).slice(-2);
+  var mm = ('0'+THANG).slice(-2);
+  document.getElementById('di-from').value = NAM + '-' + mm + '-' + ('0'+from).slice(-2);
+  document.getElementById('di-to').value = NAM + '-' + mm + '-' + ('0'+to).slice(-2);
   document.getElementById('date-info').textContent = 'Đang xem: '+fmtDay(from)+' -> '+fmtDay(to)+' ('+label+')';
   if (_data) renderAll(_data);
 }
@@ -1965,9 +1966,10 @@ document.addEventListener('DOMContentLoaded', function() {
   selFrom = yd;
   selTo = yd;
   selLabel = 'Hom qua';
-  document.getElementById('di-from').value = '2026-06-' + ('0'+yd).slice(-2);
-  document.getElementById('di-to').value = '2026-06-' + ('0'+yd).slice(-2);
-  document.getElementById('date-info').textContent = 'Dang xem: ' + ('0'+yd).slice(-2) + '/06 (Hom qua)';
+  var mm0 = ('0'+THANG).slice(-2);
+  document.getElementById('di-from').value = NAM + '-' + mm0 + '-' + ('0'+yd).slice(-2);
+  document.getElementById('di-to').value = NAM + '-' + mm0 + '-' + ('0'+yd).slice(-2);
+  document.getElementById('date-info').textContent = 'Dang xem: ' + ('0'+yd).slice(-2) + '/' + mm0 + ' (Hom qua)';
   var btn = document.getElementById('dbtn-hom-qua');
   if (btn) btn.classList.add('active');
   loadData();
