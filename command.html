@@ -1131,11 +1131,10 @@ function renderOnline(data) {
   // Phản hồi: đạt / không đạt mốc <= 2 phút (120s)
   var phDat = tgPH > 0 && tgPH <= 120;
   var phText = tgPH <= 0 ? 'Chưa đo' : (phDat ? 'Đạt' : 'Không đạt');
-  // Ngân sách chi tiêu cho mỗi lead ads (mess + comment từ Báo cáo ADS)
-  var messTong    = sumDay(adsDays, 'mess')    || Number(ads.mess    || 0);
-  var commentTong = sumDay(adsDays, 'comment') || Number(ads.comment || 0);
-  var leadAdsBC   = messTong + commentTong;
-  var cpLeadAds   = leadAdsBC > 0 ? Math.round(nsAds / leadAdsBC) : 0;
+  // Ngân sách chi tiêu cho mỗi lead ads (mess từ Báo cáo ADS)
+  var messTong  = sumDay(adsDays, 'mess') || Number(ads.mess || 0);
+  var leadAdsBC = messTong;
+  var cpLeadAds = leadAdsBC > 0 ? Math.round(nsAds / leadAdsBC) : 0;
 
   // KPI targets từ sheet (tổng tháng)
   var leadMT_thang = Number(marketing.leadAds && marketing.leadAds.chiTieu || 0)
@@ -1168,7 +1167,7 @@ function renderOnline(data) {
 
   // 5 KPI chính - mỗi chỉ số gắn team + leading/lagging
   document.getElementById('kpi-online-row1').innerHTML =
-    kc(pLead>=95?'cg':pLead>=75?'ca':'','Tổng lead',fmtN(leadTong),'🌿 '+fmtN(leadTN)+' organic · 📢 '+fmtN(leadAds)+' ads<br><span style="color:#f5c842;font-weight:500">💰 '+(cpLeadAds>0?Math.round(cpLeadAds/1000)+'k/lead ads':'-- /lead ads')+(leadAdsBC>0?' <span style="font-weight:400;font-size:9px;color:var(--muted)">('+fmtN(messTong)+' mess + '+fmtN(commentTong)+' cmt)</span>':'')+'</span><br><span style="color:var(--muted);font-size:10px">KPI: '+fmtN(leadMT_range)+' · '+pLead+'% HT</span>'+tag('lead','Team Ads/MKT'),0,1) +
+    kc(pLead>=95?'cg':pLead>=75?'ca':'','Tổng lead',fmtN(leadTong),'🌿 '+fmtN(leadTN)+' organic · 📢 '+fmtN(leadAds)+' ads<br><span style="color:#f5c842;font-weight:500">💰 '+(cpLeadAds>0?Math.round(cpLeadAds/1000)+'k/lead ads':'-- /lead ads')+(messTong>0?' <span style="font-weight:400;font-size:9px;color:var(--muted)">('+fmtN(messTong)+' mess)</span>':'')+'</span><br><span style="color:var(--muted);font-size:10px">KPI: '+fmtN(leadMT_range)+' · '+pLead+'% HT</span>'+tag('lead','Team Ads/MKT'),0,1) +
     kc(phDat?'cg':'',phDat?'Phản hồi ✅':'Phản hồi',phText,(tgPH>0?'TB '+fmtSec(tgPH)+' · mốc ≤2p':'Chưa có data')+tag('lead','Team Sale Online'),0,1) +
     kc((function(){var mt=Number(marketing.tiLeChot&&marketing.tiLeChot.chiTieu||0);return mt>0?(pTong>=mt?'cg':pTong>=mt*0.8?'ca':''):'';})(),'Tỉ lệ chốt đơn',pTong+'%',fmtN(donTong)+' đơn / '+fmtN(leadTong)+' lead'+(Number(marketing.tiLeChot&&marketing.tiLeChot.chiTieu||0)>0?'<br><span style="color:var(--muted);font-size:10px">MT: '+Number(marketing.tiLeChot.chiTieu)+'% · '+(pTong>=Number(marketing.tiLeChot.chiTieu)?'✅ Đạt':'⚠️ Chưa đạt')+'</span>':'')+tag('lag','Sale + Ads'),0,1) +
     kc(pGTTB>=100?'cg':pGTTB>=75?'ca':'','GTTB đơn Daily',fmtVND(gttbDailyOnline),fmtN(donDailyOnline)+' đơn daily<br><span style="color:var(--muted);font-size:10px">KPI: '+fmtVND(gttbDailyMT)+' · '+pGTTB+'% HT</span>'+tag('lag','Team Sale'),0,1) +
