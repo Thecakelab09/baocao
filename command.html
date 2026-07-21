@@ -220,9 +220,18 @@ table.dt .today td:first-child{color:var(--accent)!important}
   padding:24px;max-width:500px;margin:40px auto;text-align:center;position:relative;z-index:1}
 .error-box h3{color:var(--red);margin-bottom:8px}
 .error-box p{font-size:13px;color:var(--muted);line-height:1.7}
-.refresh-btn{padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:var(--s2);
-  color:var(--muted);font-size:11px;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;transition:all .15s}
-.refresh-btn:hover{color:var(--text)}
+.refresh-btn{padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:var(--s2);
+  color:var(--muted);font-size:12px;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;transition:all .15s;
+  display:inline-flex;align-items:center;gap:6px}
+.refresh-btn:hover:not(:disabled){color:var(--text)}
+.refresh-btn:disabled{opacity:.6;cursor:not-allowed}
+.refresh-btn .rbtn-icon{display:inline-block;transition:transform .3s}
+.refresh-btn.loading .rbtn-icon{animation:spin .6s linear infinite}
+.refresh-badge{font-size:10px;color:var(--muted);padding:2px 8px;border-radius:99px;
+  background:rgba(255,255,255,.06);border:1px solid var(--border);display:none;align-items:center;gap:5px}
+.refresh-badge.show{display:inline-flex}
+.refresh-badge .mini-spin{width:10px;height:10px;border:1.5px solid var(--dim);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
 
 footer{position:relative;z-index:1;text-align:center;padding:24px;color:var(--dim);font-size:11px;border-top:1px solid var(--border)}
 
@@ -437,14 +446,14 @@ var MONTH_CONFIG = {
   6:  { nam: 2026, label: 'T6', tongNgay: 30, kpiOnline: 683000000,
         url: 'https://script.google.com/macros/s/AKfycbyGu08yCOau9GMhExEwsyrh-Bt3v6NAd6NL-pDowqZUyFj4SSWEtqN7QkwKLDZXJerT/exec' },
   7:  { nam: 2026, label: 'T7', tongNgay: 31, kpiOnline: 0,
-        url: 'https://script.google.com/macros/s/AKfycbyGu08yCOau9GMhExEwsyrh-Bt3v6NAd6NL-pDowqZUyFj4SSWEtqN7QkwKLDZXJerT/exec' },
+        url: 'https://script.google.com/macros/s/AKfycbxcTD8sUyE2cbWh4Gqgodt1cpkEuvbmu8V76pQDyGuX_nHQkoTtAZ6twfGSvMhHssgvhg/exec' },
   // 8:  { nam: 2026, label: 'T8', tongNgay: 31, kpiOnline: 0, url: '' },
   // 9:  { nam: 2026, label: 'T9', tongNgay: 30, kpiOnline: 0, url: '' },
   // 10: { nam: 2026, label: 'T10',tongNgay: 31, kpiOnline: 0, url: '' },
   // 11: { nam: 2026, label: 'T11',tongNgay: 30, kpiOnline: 0, url: '' },
   // 12: { nam: 2026, label: 'T12',tongNgay: 31, kpiOnline: 0, url: '' },
 };
-var ACTIVE_MONTH = 6;
+var ACTIVE_MONTH = 7;
 
 var API_URL = MONTH_CONFIG[ACTIVE_MONTH].url;
 var KPI_ONLINE = MONTH_CONFIG[ACTIVE_MONTH].kpiOnline;
@@ -545,7 +554,7 @@ function applyCustomRange() {
   var t = document.getElementById('di-to').value;
   if (!f || !t) return;
   var fd = parseInt(f.split('-')[2]), td = parseInt(t.split('-')[2]);
-  if (fd > 0 && td >= fd && td <= 30) {
+  if (fd > 0 && td >= fd && td <= TONG_NGAY) {
     setDateRange(fd, td, fd+'->'+td);
   }
 }
@@ -564,14 +573,14 @@ function setYesterday() {
 function setThisWeek() {
   TODAY_DAY = new Date().getDate(); NGAY_CON = TONG_NGAY - TODAY_DAY;
   // Tuần ISO: T2 đầu tuần. getDay(): 0=CN..6=T7
-  var dow = new Date(2026, 5, TODAY_DAY).getDay();
+  var dow = new Date(NAM, THANG-1, TODAY_DAY).getDay();
   var offset = dow === 0 ? 6 : dow - 1;
   var start = Math.max(1, TODAY_DAY - offset);
   setDateRange(start, TODAY_DAY, 'Tuan nay');
 }
 function setLastWeek() {
   TODAY_DAY = new Date().getDate(); NGAY_CON = TONG_NGAY - TODAY_DAY;
-  var dow = new Date(2026, 5, TODAY_DAY).getDay();
+  var dow = new Date(NAM, THANG-1, TODAY_DAY).getDay();
   var offset = dow === 0 ? 6 : dow - 1;
   var thisStart = TODAY_DAY - offset;
   var lastEnd = Math.max(1, thisStart - 1);
@@ -847,22 +856,102 @@ function patchDataWithFabi(data) {
   return data;
 }
 
-function loadData() {
-  fetch(API_URL + '?month=' + THANG)
+function setLoadingBtn(on) {
+  var btn = document.getElementById('refresh-btn');
+  if (!btn) return;
+  btn.disabled = on;
+  btn.classList.toggle('loading', on);
+}
+
+function showRefreshBadge(on) {
+  var el = document.getElementById('refresh-badge');
+  if (el) el.classList.toggle('show', on);
+}
+
+function onDataReady(data, fromCache) {
+  if (data.error) { showError(data.error); return; }
+  data = patchDataWithFabi(data);
+  _data = data;
+  renderAll(data);
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('footer').style.display = 'block';
+  var now = new Date();
+  document.getElementById('last-update').textContent = 'Cập nhật: '+now.getHours()+':'+('0'+now.getMinutes()).slice(-2);
+  if (!fromCache) {
+    setLoadingBtn(false);
+    showRefreshBadge(false);
+    setTimeout(animateBars, 300);
+  } else {
+    setTimeout(animateBars, 100);
+  }
+}
+
+function loadData(bustCache) {
+  // Reset trước khi fetch để tránh data tháng cũ lẫn vào
+  KH_CARD_DAILY   = {tueTinh:{}, timesCity:{}, pbc:{}, trungHoa:{}};
+  ITEMS_DIST_DATA  = {
+    byDay:   {tueTinh:{}, timesCity:{}, pbc:{}, trungHoa:{}},
+    totals:  {tueTinh:{}, timesCity:{}, pbc:{}, trungHoa:{}}
+  };
+
+  var lsKey = 'tcl_dash_' + THANG;
+  var hasStale = false;
+
+  // Hiển thị data cũ từ localStorage ngay lập tức (nếu không phải force refresh)
+  if (!bustCache) {
+    try {
+      var stale = localStorage.getItem(lsKey);
+      if (stale) {
+        var staleData = JSON.parse(stale);
+        onDataReady(staleData, true);
+        hasStale = true;
+        showRefreshBadge(true); // badge "đang cập nhật"
+      }
+    } catch(e) {}
+  }
+
+  var _loadTimer = null;
+  if (!hasStale) {
+    // Lần đầu: spinner toàn màn hình + loading hints theo thời gian
+    document.getElementById('loading-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    var _hints = [
+      [5,  'Đang đọc dữ liệu từ Sheets...'],
+      [15, 'Đang xử lý dữ liệu Fabi...'],
+      [30, 'Sắp xong rồi, cảm ơn bạn chờ...'],
+      [50, 'Đang hoàn tất, vui lòng đợi thêm...'],
+    ];
+    var _t0 = Date.now();
+    _loadTimer = setInterval(function() {
+      var sec = Math.floor((Date.now() - _t0) / 1000);
+      for (var i = _hints.length - 1; i >= 0; i--) {
+        if (sec >= _hints[i][0]) {
+          document.getElementById('loading-txt').textContent = _hints[i][1];
+          break;
+        }
+      }
+    }, 1000);
+  }
+
+  setLoadingBtn(true);
+
+  var url = API_URL + '?month=' + THANG + (bustCache ? '&bust=1' : '');
+  fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.error) { showError(data.error); return; }
-      data = patchDataWithFabi(data);
-      _data = data;
-      renderAll(data);
-      document.getElementById('loading-screen').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      document.getElementById('footer').style.display = 'block';
-      var now = new Date();
-      document.getElementById('last-update').textContent = 'Cập nhật: '+now.getHours()+':'+('0'+now.getMinutes()).slice(-2);
-      setTimeout(animateBars, 300);
+      if (_loadTimer) { clearInterval(_loadTimer); _loadTimer = null; }
+      if (!data.error) {
+        try { localStorage.setItem(lsKey, JSON.stringify(data)); } catch(e) {}
+      }
+      onDataReady(data, false);
     })
-    .catch(function(err) { showError('Lỗi: ' + err.message); });
+    .catch(function(err) {
+      if (_loadTimer) { clearInterval(_loadTimer); _loadTimer = null; }
+      setLoadingBtn(false);
+      showRefreshBadge(false);
+      if (!hasStale) showError('Lỗi: ' + err.message);
+    });
 }
 
 function showError(msg) {
@@ -934,7 +1023,8 @@ function applyStoreFilter() {
 
 // ── ONLINE TAB ────────────────────────────────────────────────────
 function renderOnline(data) {
-  var online = data.online || {};
+  var online    = data.online    || {};
+  var marketing = data.marketing || {};
   var days = filterDays(online.ngayData, selFrom, selTo);
   var nDays = days.length || 1;
 
@@ -960,7 +1050,7 @@ function renderOnline(data) {
   // Ngân sách ads (tab "Ads" - IMPORTRANGE từ sheet ads riêng)
   var ads = data.ads || {};
   var adsDays = filterDays(ads.ngayData, selFrom, selTo);
-  var nsAds = sumDay(adsDays, 'chiPhi');   // Ngân sách ads theo khoảng chọn
+  var nsAds = sumDay(adsDays, 'chiPhi') || Number(ads.chiPhi || 0); // per-day hoặc fallback tổng tháng
   var roasAds = adsDays.length ? (sumDay(adsDays,'roas')/adsDays.length) : 0;
   if (leadTongDay > 0) {
     leadAds=leadAdsDay; donAds=donAdsDay;
@@ -1045,11 +1135,9 @@ function renderOnline(data) {
   var cpLeadAds = leadAds > 0 ? Math.round(nsAds / leadAds) : 0;
 
   // KPI targets từ sheet (tổng tháng)
-  var leadMT_thang = Number(online.leadAds && online.leadAds.chiTieu || 4182);
-  var leadMT_range = selLabel === 'Thang nay' ? 4182
-    : (selLabel === 'Tuan nay' || selLabel === 'Tuan truoc') ? 976
-    : selLabel === 'Hom qua' ? 135
-    : Math.round(leadMT_thang / TONG_NGAY * nDays);
+  var leadMT_thang = Number(marketing.leadAds && marketing.leadAds.chiTieu || 0)
+    + Number(marketing.leadTuNhien && marketing.leadTuNhien.chiTieu || 0);
+  var leadMT_range = leadMT_thang > 0 ? Math.round(leadMT_thang / TONG_NGAY * nDays) : 0;
   var pLead = pct(leadTong, leadMT_range);
   // GTTB Daily KPI — đọc từ sheet theo mode
   var gttbDailyMT_thang = Number(online.gttbDonDaily && online.gttbDonDaily.chiTieu || 322765);
@@ -1079,7 +1167,7 @@ function renderOnline(data) {
   document.getElementById('kpi-online-row1').innerHTML =
     kc(pLead>=95?'cg':pLead>=75?'ca':'','Tổng lead',fmtN(leadTong),'🌿 '+fmtN(leadTN)+' organic · 📢 '+fmtN(leadAds)+' ads<br><span style="color:#f5c842;font-weight:500">💰 '+(cpLeadAds>0?Math.round(cpLeadAds/1000)+'k/lead ads':'-- /lead ads')+'</span><br><span style="color:var(--muted);font-size:10px">KPI: '+fmtN(leadMT_range)+' · '+pLead+'% HT</span>'+tag('lead','Team Ads/MKT'),0,1) +
     kc(phDat?'cg':'',phDat?'Phản hồi ✅':'Phản hồi',phText,(tgPH>0?'TB '+fmtSec(tgPH)+' · mốc ≤2p':'Chưa có data')+tag('lead','Team Sale Online'),0,1) +
-    kc('','Tỉ lệ chốt đơn',pTong+'%',fmtN(donTong)+' đơn / '+fmtN(leadTong)+' lead'+tag('lag','Sale + Ads'),0,1) +
+    kc((function(){var mt=Number(marketing.tiLeChot&&marketing.tiLeChot.chiTieu||0);return mt>0?(pTong>=mt?'cg':pTong>=mt*0.8?'ca':''):'';})(),'Tỉ lệ chốt đơn',pTong+'%',fmtN(donTong)+' đơn / '+fmtN(leadTong)+' lead'+(Number(marketing.tiLeChot&&marketing.tiLeChot.chiTieu||0)>0?'<br><span style="color:var(--muted);font-size:10px">MT: '+Number(marketing.tiLeChot.chiTieu)+'% · '+(pTong>=Number(marketing.tiLeChot.chiTieu)?'✅ Đạt':'⚠️ Chưa đạt')+'</span>':'')+tag('lag','Sale + Ads'),0,1) +
     kc(pGTTB>=100?'cg':pGTTB>=75?'ca':'','GTTB đơn Daily',fmtVND(gttbDailyOnline),fmtN(donDailyOnline)+' đơn daily<br><span style="color:var(--muted);font-size:10px">KPI: '+fmtVND(gttbDailyMT)+' · '+pGTTB+'% HT</span>'+tag('lag','Team Sale'),0,1) +
     kc('cp','Số BSN',fmtN(bsn)+' cái','CT/ngày: '+Math.floor(bsnMT_ngay)+' cái'+tag('lag','Team Sale'),pct(bsn, Math.round(bsnMT_ngay*nDays)));
 
@@ -1160,7 +1248,7 @@ function renderKHReturnDaily() {
       if (!dd || dd.tongDon === 0) continue;
       dayRows.push(
         '<div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px">' +
-          '<span style="flex:1.2;color:var(--text);font-weight:600">'+d+'/06</span>' +
+          '<span style="flex:1.2;color:var(--text);font-weight:600">'+d+'/'+('0'+THANG).slice(-2)+'</span>' +
           '<span style="flex:1;text-align:center;color:'+s.color+';font-weight:700">'+dd.tongDon+'</span>' +
           '<span style="flex:1;text-align:center;color:var(--green)">'+dd.donCu+'</span>' +
           '<span style="flex:1;text-align:center;color:var(--accent)">'+dd.donMoi+'</span>' +
@@ -1207,7 +1295,7 @@ function renderItemsDistribution() {
       if (dd.tong === 0) continue;
       dayRows.push(
         '<div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px">' +
-          '<span style="flex:1.2;color:var(--text);font-weight:600">'+d+'/06</span>' +
+          '<span style="flex:1.2;color:var(--text);font-weight:600">'+d+'/'+('0'+THANG).slice(-2)+'</span>' +
           '<span style="flex:1;text-align:center;color:'+s.color+';font-weight:700">'+dd.tbItems+'</span>' +
           '<span style="flex:1;text-align:center;color:var(--muted)">'+dd.tong+'</span>' +
           '<span style="flex:1;text-align:center;color:var(--text)">'+dd.g1+'</span>' +
@@ -1342,6 +1430,16 @@ function toggleBanChay(btn) {
 function renderKhachHang() {
   var el = document.getElementById('heading-month');
   if (el) el.textContent = THANG;
+  // Cập nhật labels tháng động
+  var label = 'T' + THANG + '/' + NAM;
+  var khSub = document.getElementById('kh-return-sub');
+  if (khSub) khSub.textContent = 'Nguồn: Fabi ' + label + ' (real-time) · Offline only';
+  var itemsSub = document.getElementById('items-dist-sub');
+  if (itemsSub) itemsSub.textContent = 'Theo từng ngày · Fabi ' + label;
+  var bcSub = document.getElementById('ban-chay-sub');
+  if (bcSub) bcSub.textContent = 'Theo ngày đã chọn · Google Sheet ' + label + ' Real-time';
+  var footer = document.getElementById('footer');
+  if (footer) footer.textContent = '🎂 The Cake Lab · Command Center · ' + label + ' · Live Google Sheets';
   var CH_KEYS_ALL = ['tueTinh','timesCity','pbc','trungHoa'];
   var t = { tongDon:0, khCu:0, khCu90:0, khCuGt90:0, khMoi:0, khKhongTD:0 };
   CH_KEYS_ALL.forEach(function(ch) {
@@ -1660,9 +1758,6 @@ function renderCongThucDoanhThu(stores) {
           '<div style="font-size:8.5px;color:var(--muted)">ASP/item</div>'+
         '</div>'+
       '</div>'+
-      '<div style="margin-top:6px;font-size:9px;color:var(--muted);text-align:center">'+
-        fmtN(traffic)+' × '+conversion+'% × '+fmtVND(asp)+' ≈ '+fmtVND(dtTinhTheoCT)+
-      '</div>'+
     '</div>';
   }).join('');
 
@@ -1708,7 +1803,8 @@ function renderOfflineNgay(stores) {
     var gttbD = donD > 0 ? Math.round(dtD/donD) : Number(s.ch.daily&&s.ch.daily.gttbDon||0);
     var dtMT = Number(s.ch.doanhThu&&s.ch.doanhThu.chiTieu||0);
     var nDays = days.length || 1;
-    var dtMT_range = Math.round(dtMT/TONG_NGAY*nDays);
+    var chiTieuNgay = days.reduce(function(acc, d) { return acc + (Number(d.chiTieu)||0); }, 0);
+    var dtMT_range = chiTieuNgay > 0 ? chiTieuNgay : Math.round(dtMT/TONG_NGAY*nDays);
     var p = pct(dt, dtMT_range);
     var bsnMT = Number(s.ch.soBSN&&s.ch.soBSN.chiTieu||0);
     var bsnCT_ngay = Math.floor(bsnMT/TONG_NGAY);
@@ -1959,7 +2055,7 @@ function animateBars() {
 document.addEventListener('DOMContentLoaded', function() {
   // Recalculate TODAY in case var was stale
   var now = new Date();
-  TODAY_DAY = now.getDate();
+  TODAY_DAY = (NAM === now.getFullYear() && THANG === (now.getMonth()+1)) ? now.getDate() : TONG_NGAY;
   NGAY_CON = TONG_NGAY - TODAY_DAY;
   // Init: mặc định Hôm qua
   var yd = Math.max(1, TODAY_DAY - 1);
@@ -2041,7 +2137,10 @@ document.addEventListener('DOMContentLoaded', function() {
     <button class="dbtn" id="sf-trungHoa" onclick="setStoreFilter('trungHoa')" style="border-color:var(--yellow);color:var(--yellow)">Trung Hòa</button>
   </div>
   <div class="date-info" id="date-info"></div>
-  <button class="refresh-btn" onclick="loadData()" style="margin-left:8px">↺ Làm mới</button>
+  <button id="refresh-btn" class="refresh-btn" onclick="loadData(true)" style="margin-left:8px">
+    <span class="rbtn-icon">↺</span> Làm mới
+  </button>
+  <span id="refresh-badge" class="refresh-badge"><span class="mini-spin"></span>Đang cập nhật…</span>
   <span id="last-update" style="font-size:11px;color:var(--dim)"></span>
 </div>
 
@@ -2058,7 +2157,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div id="loading-screen" class="loading-screen">
   <div class="spinner"></div>
-  <div class="loading-txt">Đang tải dữ liệu...</div>
+  <div class="loading-txt" id="loading-txt">Đang kết nối...</div>
+  <div style="font-size:11px;color:var(--dim);margin-top:4px" id="loading-sub">Lần đầu có thể mất 20–40 giây</div>
 </div>
 <div id="error-screen" style="display:none">
   <div class="error-box"><h3>⚠️ Lỗi tải dữ liệu</h3><p id="error-msg"></p></div>
@@ -2152,7 +2252,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="ch-grid" id="kh-ch-cards"></div>
 
   <!-- KH mới vs KH cũ quay lại — theo ngày -->
-  <div class="sh" style="margin-top:28px"><div class="sh-icon" style="background:rgba(245,200,66,.15)">🔁</div><div class="sh-title">KH mới & KH cũ quay lại · theo ngày</div><div class="sh-line"></div><div class="sh-sub">Nguồn: Fabi T6/2026 (real-time) · Offline only</div></div>
+  <div class="sh" style="margin-top:28px"><div class="sh-icon" style="background:rgba(245,200,66,.15)">🔁</div><div class="sh-title">KH mới & KH cũ quay lại · theo ngày</div><div class="sh-line"></div><div class="sh-sub" id="kh-return-sub">Nguồn: Fabi T6/2026 (real-time) · Offline only</div></div>
   <div id="kh-return-daily-wrap"></div>
 
   <div class="sh" style="margin-top:28px"><div class="sh-icon" style="background:rgba(126,232,162,.15)">🛒</div><div class="sh-title">Phân bổ số item / đơn (không tính đơn BSN)</div><div class="sh-line"></div><div class="sh-sub" id="items-dist-sub">Theo từng ngày · Fabi T6/2026</div></div>
