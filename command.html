@@ -1182,8 +1182,127 @@ function renderOnline(data) {
   // DT ONLINE THEO CH
   renderOnlineCHTable(days);
 
-  // HÀNH ĐỘNG
+  // CHART KPI THEO NGÀY
+  renderKpiOnlineChart(online.ngayData);
 
+}
+
+function renderKpiOnlineChart(allNgayData) {
+  var wrap = document.getElementById('kpi-online-chart');
+  if (!wrap) return;
+  var kpiPerDay = KPI_ONLINE > 0 ? Math.round(KPI_ONLINE / TONG_NGAY) : 0;
+
+  var dayMap = {};
+  (allNgayData || []).forEach(function(d) { if (d.ngay) dayMap[d.ngay] = d; });
+  var allDays = [];
+  for (var i = 1; i <= TONG_NGAY; i++) {
+    allDays.push({ ngay: i, dt: (dayMap[i] && dayMap[i].doanhThu) || 0 });
+  }
+  var lastIdx = 0;
+  allDays.forEach(function(d, idx) { if (d.dt > 0) lastIdx = idx; });
+  var vis = allDays.slice(0, Math.max(lastIdx + 1, TODAY_DAY));
+  if (!vis.length) {
+    wrap.innerHTML = '<div style="padding:20px;text-align:center;color:var(--dim);font-size:12px">Chưa có dữ liệu theo ngày</div>';
+    return;
+  }
+
+  function buildChart(mode) {
+    var n = vis.length;
+    var W = 900, H = 170, PL = 46, PR = 10, PT = 12, PB = 28;
+    var cW = W - PL - PR, cH = H - PT - PB;
+    var gap = cW / n;
+    var barW = Math.max(4, Math.floor(gap * 0.68));
+
+    function xp(i) { return PL + i * gap + (gap - barW) / 2; }
+
+    if (mode === 'dt') {
+      var maxV = 0;
+      vis.forEach(function(d) { if (d.dt > maxV) maxV = d.dt; });
+      if (kpiPerDay > 0) maxV = Math.max(maxV, kpiPerDay);
+      maxV = maxV * 1.15 || 1;
+      var tickUnit = Math.pow(10, Math.floor(Math.log(maxV) / Math.log(10)));
+      if (maxV / tickUnit > 6) tickUnit *= 2;
+      var ticks = [];
+      for (var t = 0; t * tickUnit <= maxV; t++) ticks.push(t * tickUnit);
+
+      function yp(v) { return PT + cH - (v / maxV * cH); }
+
+      var s = ['<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'];
+      ticks.forEach(function(tv) {
+        var y = yp(tv); if (y < PT - 2 || y > H - PB + 2) return;
+        s.push('<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="rgba(255,255,255,.06)" stroke-width="1"/>');
+        s.push('<text x="'+(PL-5)+'" y="'+(y+3)+'" fill="rgba(255,255,255,.28)" font-size="9" text-anchor="end">'+fmtM(tv)+'</text>');
+      });
+      if (kpiPerDay > 0) {
+        var ky = yp(kpiPerDay);
+        s.push('<line x1="'+PL+'" y1="'+ky+'" x2="'+(W-PR)+'" y2="'+ky+'" stroke="rgba(245,200,66,.5)" stroke-width="1.2" stroke-dasharray="5,3"/>');
+        s.push('<text x="'+(W-PR)+'" y="'+(ky-4)+'" fill="rgba(245,200,66,.65)" font-size="8" text-anchor="end">'+fmtM(kpiPerDay)+'/ngày</text>');
+      }
+      vis.forEach(function(d, i) {
+        var x = xp(i), bh = d.dt > 0 ? Math.max(2, cH * d.dt / maxV) : 0, by = PT + cH - bh;
+        var isToday = d.ngay === TODAY_DAY;
+        var col = d.dt <= 0 ? 'rgba(255,255,255,.06)' : (kpiPerDay > 0 && d.dt >= kpiPerDay * 0.95) ? 'var(--green)' : (kpiPerDay > 0 && d.dt >= kpiPerDay * 0.7) ? 'var(--accent)' : 'rgba(96,196,247,.6)';
+        if (isToday && d.dt > 0) col = 'var(--accent)';
+        s.push('<rect x="'+x+'" y="'+(bh>0?by:PT+cH-2)+'" width="'+barW+'" height="'+(bh||2)+'" fill="'+col+'" rx="2"/>');
+        if (n <= 16 || d.ngay % 2 === 1 || isToday)
+          s.push('<text x="'+(x+barW/2)+'" y="'+(H-PB+12)+'" fill="rgba(255,255,255,'+(isToday?'.9':'.35')+'" font-size="8" text-anchor="middle">'+(isToday?'▲':d.ngay)+'</text>');
+        if (d.dt > 0 && bh > 14)
+          s.push('<text x="'+(x+barW/2)+'" y="'+(by-3)+'" fill="rgba(255,255,255,.5)" font-size="7" text-anchor="middle">'+fmtM(d.dt)+'</text>');
+      });
+      s.push('</svg>'); return s.join('');
+
+    } else {
+      if (!kpiPerDay) return '<div style="padding:16px;text-align:center;color:var(--dim);font-size:12px">Chưa có KPI tháng để tính %</div>';
+      var maxP = 0;
+      vis.forEach(function(d) { var p = Math.round(d.dt / kpiPerDay * 100); if (p > maxP) maxP = p; });
+      maxP = Math.max(maxP * 1.1, 120) || 120;
+      var pTicks = [0, 50, 100];
+      if (maxP > 120) pTicks.push(150);
+
+      function ypp(v) { return PT + cH - (v / maxP * cH); }
+
+      var s = ['<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'];
+      pTicks.forEach(function(tv) {
+        var y = ypp(tv); if (y < PT - 2 || y > H - PB + 2) return;
+        s.push('<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="'+(tv===100?'rgba(245,200,66,.3)':'rgba(255,255,255,.06)')+'" stroke-width="'+(tv===100?'1.5':'1')+'"/>');
+        s.push('<text x="'+(PL-5)+'" y="'+(y+3)+'" fill="rgba(255,255,255,.28)" font-size="9" text-anchor="end">'+tv+'%</text>');
+      });
+      var y100 = ypp(100);
+      if (y100 >= PT && y100 <= H - PB)
+        s.push('<text x="'+(W-PR)+'" y="'+(y100-4)+'" fill="rgba(245,200,66,.65)" font-size="8" text-anchor="end">KPI/ngày</text>');
+
+      vis.forEach(function(d, i) {
+        var p = d.dt > 0 ? Math.round(d.dt / kpiPerDay * 100) : 0;
+        var x = xp(i), bh = p > 0 ? Math.max(2, cH * Math.min(p, maxP) / maxP) : 0, by = PT + cH - bh;
+        var isToday = d.ngay === TODAY_DAY;
+        var col = p <= 0 ? 'rgba(255,255,255,.06)' : p >= 95 ? 'var(--green)' : p >= 70 ? 'var(--accent)' : 'rgba(96,196,247,.6)';
+        if (isToday && d.dt > 0) col = 'var(--accent)';
+        s.push('<rect x="'+x+'" y="'+(bh>0?by:PT+cH-2)+'" width="'+barW+'" height="'+(bh||2)+'" fill="'+col+'" rx="2"/>');
+        if (n <= 16 || d.ngay % 2 === 1 || isToday)
+          s.push('<text x="'+(x+barW/2)+'" y="'+(H-PB+12)+'" fill="rgba(255,255,255,'+(isToday?'.9':'.35')+'" font-size="8" text-anchor="middle">'+(isToday?'▲':d.ngay)+'</text>');
+        if (p > 0 && bh > 14)
+          s.push('<text x="'+(x+barW/2)+'" y="'+(by+10)+'" fill="rgba(255,255,255,.6)" font-size="7" text-anchor="middle">'+p+'%</text>');
+      });
+      s.push('</svg>'); return s.join('');
+    }
+  }
+
+  var _chartTab = 'dt';
+  function renderChart() {
+    var tabs = [
+      { id:'dt',  label:'📊 DT theo ngày' },
+      { id:'pct', label:'% đạt KPI / ngày' }
+    ];
+    var tabsHtml = '<div style="display:flex;gap:6px;margin-bottom:10px">' +
+      tabs.map(function(t) {
+        var a = t.id === _chartTab;
+        return '<button onclick="kpiOnlineTab(\''+t.id+'\')" style="padding:4px 14px;border-radius:6px;border:1px solid '+(a?'var(--accent)':'rgba(255,255,255,.12)')+';background:'+(a?'rgba(245,200,66,.12)':'transparent')+';color:'+(a?'var(--accent)':'var(--muted)')+';font-size:11px;cursor:pointer;font-weight:'+(a?'700':'400')+'">'+t.label+'</button>';
+      }).join('') +
+    '</div>';
+    wrap.innerHTML = '<div style="margin-top:4px;padding:14px 16px 8px;background:var(--s1);border-radius:10px">' + tabsHtml + buildChart(_chartTab) + '</div>';
+  }
+  window.kpiOnlineTab = function(id) { _chartTab = id; renderChart(); };
+  renderChart();
 }
 
 function renderOnlineTable(days, bsnMT_ngay, dtMT_thang) {
@@ -2229,6 +2348,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div id="h-urgency" class="hb-pct">--</div>
     </div>
   </div>
+  <div id="kpi-online-chart" data-store-scope="all" style="margin-top:12px"></div>
 
 </div>
 </div>
