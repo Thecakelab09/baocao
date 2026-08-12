@@ -78,6 +78,7 @@ function readOnline(ss, tab) {
     ngayData.push({
       ngay:              d,
       doanhThu:          n(5,  c),
+      doanhThuChiTieu:   n(5,  c+1),
       soDon:             n(6,  c),
       gttbDon:           n(7,  c),
       soBSN:             n(10, c),
@@ -429,7 +430,7 @@ function readFabiTopProducts(ss, fabiRows) {
     return null;
   }
 
-  var TARGET_MONTH = 7;
+  var TARGET_MONTH = 8;
   var TARGET_YEAR  = 2026;
   var startRow = 2;
 
@@ -506,7 +507,7 @@ function readFabiKPI(ss, fabiRows) {
   var COL_SL    = 15;
   var COL_TT    = 39; // AN: Doanh thu đã net
 
-  var TARGET_MONTH = 7;
+  var TARGET_MONTH = 8;
   var TARGET_YEAR  = 2026;
   var startRow = 2;
 
@@ -710,7 +711,7 @@ function readFabiKHClassification(ss, fabiRows) {
   var COL_NGAY  = 13;
   var COL_SDT   = 37;
 
-  var TARGET_MONTH = 7;
+  var TARGET_MONTH = 8;
   var TARGET_YEAR  = 2026;
   var startRow = 2;
 
@@ -870,7 +871,7 @@ function readFabiItemsDistribution(ss, fabiRows) {
   var COL_MAHD  = 11;
   var COL_NGAY  = 13;
 
-  var TARGET_MONTH = 7;
+  var TARGET_MONTH = 8;
   var TARGET_YEAR  = 2026;
   var startRow = 2;
 

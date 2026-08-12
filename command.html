@@ -1190,13 +1190,18 @@ function renderOnline(data) {
 function renderKpiOnlineChart(allNgayData) {
   var wrap = document.getElementById('kpi-online-chart');
   if (!wrap) return;
-  var kpiPerDay = KPI_ONLINE > 0 ? Math.round(KPI_ONLINE / TONG_NGAY) : 0;
+  var kpiPerDayFlat = KPI_ONLINE > 0 ? Math.round(KPI_ONLINE / TONG_NGAY) : 0;
 
   var dayMap = {};
   (allNgayData || []).forEach(function(d) { if (d.ngay) dayMap[d.ngay] = d; });
   var allDays = [];
   for (var i = 1; i <= TONG_NGAY; i++) {
-    allDays.push({ ngay: i, dt: (dayMap[i] && dayMap[i].doanhThu) || 0 });
+    var src = dayMap[i] || {};
+    allDays.push({
+      ngay: i,
+      dt:   src.doanhThu        || 0,
+      kpi:  src.doanhThuChiTieu || kpiPerDayFlat
+    });
   }
   var lastIdx = 0;
   allDays.forEach(function(d, idx) { if (d.dt > 0) lastIdx = idx; });
@@ -1217,8 +1222,7 @@ function renderKpiOnlineChart(allNgayData) {
 
     if (mode === 'dt') {
       var maxV = 0;
-      vis.forEach(function(d) { if (d.dt > maxV) maxV = d.dt; });
-      if (kpiPerDay > 0) maxV = Math.max(maxV, kpiPerDay);
+      vis.forEach(function(d) { if (d.dt > maxV) maxV = d.dt; if (d.kpi > maxV) maxV = d.kpi; });
       maxV = maxV * 1.15 || 1;
       var tickUnit = Math.pow(10, Math.floor(Math.log(maxV) / Math.log(10)));
       if (maxV / tickUnit > 6) tickUnit *= 2;
@@ -1233,15 +1237,20 @@ function renderKpiOnlineChart(allNgayData) {
         s.push('<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="rgba(255,255,255,.06)" stroke-width="1"/>');
         s.push('<text x="'+(PL-5)+'" y="'+(y+3)+'" fill="rgba(255,255,255,.28)" font-size="9" text-anchor="end">'+fmtM(tv)+'</text>');
       });
-      if (kpiPerDay > 0) {
-        var ky = yp(kpiPerDay);
-        s.push('<line x1="'+PL+'" y1="'+ky+'" x2="'+(W-PR)+'" y2="'+ky+'" stroke="rgba(245,200,66,.5)" stroke-width="1.2" stroke-dasharray="5,3"/>');
-        s.push('<text x="'+(W-PR)+'" y="'+(ky-4)+'" fill="rgba(245,200,66,.65)" font-size="8" text-anchor="end">'+fmtM(kpiPerDay)+'/ngày</text>');
-      }
+      // Vẽ đường KPI từng ngày (nối các điểm chiTieu)
+      var kpiPoints = vis.map(function(d, i) { return (xp(i) + barW/2) + ',' + yp(d.kpi); }).join(' ');
+      s.push('<polyline points="'+kpiPoints+'" fill="none" stroke="rgba(245,200,66,.55)" stroke-width="1.5" stroke-dasharray="4,2"/>');
+      vis.forEach(function(d, i) {
+        s.push('<circle cx="'+(xp(i)+barW/2)+'" cy="'+yp(d.kpi)+'" r="2" fill="rgba(245,200,66,.7)"/>');
+      });
+      // Label KPI cuối đường
+      var last = vis[vis.length-1];
+      s.push('<text x="'+(W-PR)+'" y="'+(yp(last.kpi)-4)+'" fill="rgba(245,200,66,.65)" font-size="8" text-anchor="end">KPI</text>');
+
       vis.forEach(function(d, i) {
         var x = xp(i), bh = d.dt > 0 ? Math.max(2, cH * d.dt / maxV) : 0, by = PT + cH - bh;
         var isToday = d.ngay === TODAY_DAY;
-        var col = d.dt <= 0 ? 'rgba(255,255,255,.06)' : (kpiPerDay > 0 && d.dt >= kpiPerDay * 0.95) ? 'var(--green)' : (kpiPerDay > 0 && d.dt >= kpiPerDay * 0.7) ? 'var(--accent)' : 'rgba(96,196,247,.6)';
+        var col = d.dt <= 0 ? 'rgba(255,255,255,.06)' : (d.kpi > 0 && d.dt >= d.kpi * 0.95) ? 'var(--green)' : (d.kpi > 0 && d.dt >= d.kpi * 0.7) ? 'var(--accent)' : 'rgba(96,196,247,.6)';
         if (isToday && d.dt > 0) col = 'var(--accent)';
         s.push('<rect x="'+x+'" y="'+(bh>0?by:PT+cH-2)+'" width="'+barW+'" height="'+(bh||2)+'" fill="'+col+'" rx="2"/>');
         if (n <= 16 || d.ngay % 2 === 1 || isToday)
@@ -1252,9 +1261,10 @@ function renderKpiOnlineChart(allNgayData) {
       s.push('</svg>'); return s.join('');
 
     } else {
-      if (!kpiPerDay) return '<div style="padding:16px;text-align:center;color:var(--dim);font-size:12px">Chưa có KPI tháng để tính %</div>';
+      var hasKpi = vis.some(function(d) { return d.kpi > 0; });
+      if (!hasKpi) return '<div style="padding:16px;text-align:center;color:var(--dim);font-size:12px">Chưa có KPI ngày để tính %</div>';
       var maxP = 0;
-      vis.forEach(function(d) { var p = Math.round(d.dt / kpiPerDay * 100); if (p > maxP) maxP = p; });
+      vis.forEach(function(d) { if (d.kpi > 0) { var p = Math.round(d.dt / d.kpi * 100); if (p > maxP) maxP = p; } });
       maxP = Math.max(maxP * 1.1, 120) || 120;
       var pTicks = [0, 50, 100];
       if (maxP > 120) pTicks.push(150);
@@ -1269,10 +1279,10 @@ function renderKpiOnlineChart(allNgayData) {
       });
       var y100 = ypp(100);
       if (y100 >= PT && y100 <= H - PB)
-        s.push('<text x="'+(W-PR)+'" y="'+(y100-4)+'" fill="rgba(245,200,66,.65)" font-size="8" text-anchor="end">KPI/ngày</text>');
+        s.push('<text x="'+(W-PR)+'" y="'+(y100-4)+'" fill="rgba(245,200,66,.65)" font-size="8" text-anchor="end">100% KPI</text>');
 
       vis.forEach(function(d, i) {
-        var p = d.dt > 0 ? Math.round(d.dt / kpiPerDay * 100) : 0;
+        var p = (d.dt > 0 && d.kpi > 0) ? Math.round(d.dt / d.kpi * 100) : 0;
         var x = xp(i), bh = p > 0 ? Math.max(2, cH * Math.min(p, maxP) / maxP) : 0, by = PT + cH - bh;
         var isToday = d.ngay === TODAY_DAY;
         var col = p <= 0 ? 'rgba(255,255,255,.06)' : p >= 95 ? 'var(--green)' : p >= 70 ? 'var(--accent)' : 'rgba(96,196,247,.6)';
