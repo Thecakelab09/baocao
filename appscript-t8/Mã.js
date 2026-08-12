@@ -39,7 +39,8 @@ function doGet(e) {
       online:    readOnline(ss, 'Online T8'),
       marketing: readMarketing(ss, 'Marketing T8'),
       ads:       readAds(ss, 'Ads T8'),
-      fabiTop:   readFabiTopProducts(ss, fabiRows),
+      fabiTop:        readFabiTopProducts(ss, fabiRows),
+      fabiTopOnline:  readFabiTopOnlineProducts(ss, fabiRows),
       fabiKPI:   readFabiKPI(ss, fabiRows),
       fabiKH:    readFabiKHClassification(ss, fabiRows),
       fabiItems: readFabiItemsDistribution(ss, fabiRows),
@@ -481,6 +482,89 @@ function readFabiTopProducts(ss, fabiRows) {
     }
   });
 
+  return result;
+}
+
+function readFabiTopOnlineProducts(ss, fabiRows) {
+  var v = fabiRows;
+  if (!v) {
+    var sh = ss.getSheetByName('Fabi_TatCaCuaHang');
+    if (!sh) return { error: 'Sheet Fabi_TatCaCuaHang not found' };
+    v = sh.getDataRange().getDisplayValues();
+  }
+  if (v.length < 2) return {};
+
+  var COL_CH = 0, COL_TEN = 3, COL_NHOM = 4, COL_NGUON = 8, COL_NGAY = 13, COL_SL = 15;
+  var CH_MAP = { 'CS1':'tueTinh','CS2':'timesCity','CS3':'pbc','CS4':'trungHoa' };
+  var TARGET_MONTH = 8, TARGET_YEAR = 2026;
+
+  function normStr(s) {
+    return String(s||'').trim().toUpperCase()
+      .replace(/[àáảãạăắằẳẵặâấầẩẫậ]/gi,'A').replace(/[èéẻẽẹêếềểễệ]/gi,'E')
+      .replace(/[ìíỉĩị]/gi,'I').replace(/[òóỏõọôốồổỗộơớờởỡợ]/gi,'O')
+      .replace(/[ùúủũụưứừửữự]/gi,'U').replace(/[đ]/gi,'D').replace(/[ýỳỷỹỵ]/gi,'Y');
+  }
+  function mapCH(raw) {
+    var n = normStr(raw);
+    if (n.indexOf('CS1')!==-1) return 'tueTinh';
+    if (n.indexOf('CS2')!==-1) return 'timesCity';
+    if (n.indexOf('CS3')!==-1) return 'pbc';
+    if (n.indexOf('CS4')!==-1) return 'trungHoa';
+    for (var k in CH_MAP) if (n.indexOf(k)!==-1) return CH_MAP[k];
+    return null;
+  }
+  function mapNhom(raw) {
+    var n = normStr(raw);
+    if (n.indexOf('SINH NHAT')!==-1) return 'bsn';
+    if (n.indexOf('KEM NHO')!==-1)   return 'banhKemNho';
+    if (n.indexOf('BANH MI')!==-1)   return 'banhMi';
+    return 'banhKhac';
+  }
+  function parseDate(val) {
+    if (val instanceof Date) return { day:val.getDate(), month:val.getMonth()+1, year:val.getFullYear() };
+    var s = String(val||'').trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return { year:parseInt(m[1]), month:parseInt(m[2]), day:parseInt(m[3]) };
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return { day:parseInt(m[1]), month:parseInt(m[2]), year:parseInt(m[3]) };
+    return null;
+  }
+
+  var acc = { tueTinh:{}, timesCity:{}, pbc:{}, trungHoa:{} };
+
+  for (var r = 2; r < v.length; r++) {
+    var row = v[r];
+    var tenRaw = String(row[COL_TEN]||'').trim();
+    if (!tenRaw) continue;
+    var nguon = String(row[COL_NGUON]||'').trim().toLowerCase();
+    if (nguon === 'offline') continue; // chỉ lấy online
+    var chKey = mapCH(row[COL_CH]);
+    if (!chKey) continue;
+    var nhomKey = mapNhom(row[COL_NHOM]);
+    var dateObj = parseDate(row[COL_NGAY]);
+    if (!dateObj || dateObj.month !== TARGET_MONTH || dateObj.year !== TARGET_YEAR) continue;
+    var day = dateObj.day;
+    var sl = parseFloat(String(row[COL_SL]||'0').replace(/[^\d.,]/g,'').replace(',','.')) || 0;
+    if (sl <= 0) continue;
+    if (!acc[chKey][day]) acc[chKey][day] = { bsn:{}, banhKemNho:{}, banhMi:{}, banhKhac:{} };
+    var nhomAcc = acc[chKey][day][nhomKey];
+    nhomAcc[tenRaw] = (nhomAcc[tenRaw]||0) + sl;
+  }
+
+  var result = {};
+  ['tueTinh','timesCity','pbc','trungHoa'].forEach(function(ch) {
+    result[ch] = {};
+    for (var day in acc[ch]) {
+      result[ch][day] = {};
+      ['bsn','banhKemNho','banhMi','banhKhac'].forEach(function(nhom) {
+        var obj = acc[ch][day][nhom] || {};
+        result[ch][day][nhom] = Object.keys(obj)
+          .map(function(t) { return { ten:t, soLuong:obj[t] }; })
+          .sort(function(a,b) { return b.soLuong - a.soLuong; })
+          .slice(0, 10);
+      });
+    }
+  });
   return result;
 }
 

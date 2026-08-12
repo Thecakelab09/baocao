@@ -967,6 +967,7 @@ function renderAll(data) {
   renderKhachHang();
   renderKHReturnDaily();
   renderBanChay();
+  renderBanChayOnline();
   renderItemsDistribution();
   applyStoreFilter();
 }
@@ -1467,6 +1468,71 @@ function renderBanChay() {
     html += '</div>';
   });
   document.getElementById('ban-chay-wrap').innerHTML = html;
+}
+
+function renderBanChayOnline() {
+  if (!_data) return;
+  var fabiTop = _data.fabiTopOnline;
+  var wrapEl = document.getElementById('ban-chay-online-wrap');
+  if (!wrapEl) return;
+
+  var hasData = fabiTop && !fabiTop.error && ['tueTinh','timesCity','pbc','trungHoa'].some(function(ch) {
+    return fabiTop[ch] && Object.keys(fabiTop[ch]).length > 0;
+  });
+  if (!hasData) {
+    wrapEl.innerHTML = '<div style="padding:12px 0;font-size:12px;color:var(--dim)">Chưa có dữ liệu online từ Fabi</div>';
+    return;
+  }
+
+  var stores = [
+    {key:'tueTinh',  name:'Tuệ Tĩnh',  color:'var(--green)'},
+    {key:'timesCity',name:'TimesCity', color:'var(--blue)'},
+    {key:'pbc',      name:'PBC',       color:'var(--orange)'},
+    {key:'trungHoa', name:'Trung Hòa', color:'var(--accent)'},
+  ];
+  var medals = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
+  var html = '';
+
+  NHOM_BC.forEach(function(nhom) {
+    var icon = nhom.label.split(' ')[0];
+    var title = nhom.label.split(' ').slice(1).join(' ');
+    html += '<div class="sh" style="margin-top:16px"><div class="sh-icon" style="font-size:14px">'+icon+'</div><div class="sh-title" style="color:'+nhom.color+'">'+title+'</div><div class="sh-line"></div></div>';
+    html += '<div class="ch-grid" style="align-items:start">';
+    stores.forEach(function(s) {
+      var chFabi = fabiTop[s.key] || {};
+      var merged = {};
+      for (var dayN = selFrom; dayN <= selTo; dayN++) {
+        var dayData = chFabi[String(dayN)];
+        if (!dayData) continue;
+        (dayData[nhom.key] || []).forEach(function(item) {
+          if (!item.ten) return;
+          merged[item.ten] = (merged[item.ten]||0) + item.soLuong;
+        });
+      }
+      var items = Object.keys(merged).map(function(t){ return {ten:t, soLuong:merged[t]}; })
+        .filter(function(x){ return x.soLuong > 0; })
+        .sort(function(a,b){ return b.soLuong - a.soLuong; });
+
+      var id = 'bco-'+s.key+'-'+nhom.key;
+      var rows = items.map(function(item,idx) {
+        var ten = item.ten.charAt(0).toUpperCase()+item.ten.slice(1).toLowerCase();
+        var style = idx >= BC_SHOW_DEFAULT ? 'display:none' : 'display:flex;align-items:center;gap:8px;padding:6px 14px;border-bottom:1px solid rgba(255,255,255,.04)';
+        return '<div id="'+id+'-item-'+idx+'" style="'+style+'">' +
+          '<span style="font-size:13px;flex-shrink:0">'+(medals[idx]||idx+1)+'</span>' +
+          '<span style="flex:1;font-size:12px;color:var(--text);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ten+'</span>' +
+          '<span style="font-size:12px;font-weight:700;color:'+s.color+';flex-shrink:0;padding-left:6px">'+item.soLuong+'</span>' +
+        '</div>';
+      }).join('');
+      var btn = items.length > BC_SHOW_DEFAULT
+        ? '<div style="padding:4px 14px 8px"><button class="bc-btn" id="'+id+'-btn" data-exp="0" data-total="'+items.length+'" data-defn="'+BC_SHOW_DEFAULT+'" data-id="'+id+'" onclick="toggleBanChay(this)">▼ Xem thêm '+(items.length-BC_SHOW_DEFAULT)+' sản phẩm</button></div>'
+        : '';
+      html += '<div class="ch-card store-col" data-store="'+s.key+'"><div class="ch-head" style="border-left:3px solid '+s.color+'"><div class="ch-name" style="color:'+s.color+'">'+s.name+'</div></div>' +
+        (rows||'<div style="padding:10px 14px;font-size:11px;color:var(--dim)">Chưa có dữ liệu</div>') + btn + '</div>';
+    });
+    html += '</div>';
+  });
+
+  wrapEl.innerHTML = html;
 }
 
 function toggleBanChay(btn) {
@@ -2293,6 +2359,10 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
   <div id="kpi-online-chart" data-store-scope="all" style="margin-top:12px"></div>
+
+  <!-- Mặt hàng bán chạy Online -->
+  <div class="sh" data-store-scope="all" style="margin-top:28px"><div class="sh-icon" style="background:rgba(245,200,66,.15)">🔥</div><div class="sh-title">Mặt hàng bán chạy · Online</div><div class="sh-line"></div><div class="sh-sub">Chốt đơn online · Fabi · theo ngày đã chọn</div></div>
+  <div id="ban-chay-online-wrap" data-store-scope="all"></div>
 
 </div>
 </div>
