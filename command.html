@@ -1211,45 +1211,41 @@ function renderKpiOnlineChart(allNgayData) {
 
   function pColor(p) { return p >= 95 ? 'var(--green)' : p >= 70 ? 'var(--accent)' : 'var(--red)'; }
 
-  var dtCards = '', pctCards = '';
+  var pairs = '';
   cards.forEach(function(d) {
     var isToday = d.ngay === TODAY_DAY;
-    var pct = (d.kpi > 0 && d.dt > 0) ? Math.round(d.dt / d.kpi * 100) : (d.dt === 0 ? 0 : 0);
+    var pct = (d.kpi > 0 && d.dt > 0) ? Math.round(d.dt / d.kpi * 100) : 0;
     var barW = Math.min(pct, 100);
     var col = d.dt > 0 ? pColor(pct) : 'rgba(255,255,255,.15)';
     var border = isToday ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,.06)';
     var dayLbl = '<div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.06em;margin-bottom:5px;text-transform:uppercase">'+(isToday?'⭐ ':'')+d.ngay+'/'+THANG+'</div>';
     var bar = '<div style="height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;margin:6px 0 5px"><div style="height:100%;width:'+barW+'%;background:'+col+';border-radius:2px"></div></div>';
 
-    // Card DT
-    dtCards += '<div style="background:var(--s2);border-radius:8px;padding:10px 12px;min-width:108px;border:'+border+'">' +
+    var cardDT = '<div style="background:var(--s2);border-radius:8px;padding:10px 12px;min-width:108px;border:'+border+'">' +
       dayLbl +
+      '<div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px">DOANH THU</div>' +
       '<div style="font-size:19px;font-weight:700;color:#60c4f7;line-height:1.1">'+(d.dt>0?fmtM(d.dt):'--')+'</div>' +
       '<div style="font-size:10px;color:var(--muted);margin-top:2px">/ KPI: '+(d.kpi>0?fmtM(d.kpi):'--')+'</div>' +
       bar +
       '<div style="font-size:13px;font-weight:700;color:'+col+'">'+(d.dt>0?pct+'%':'--')+'</div>' +
     '</div>';
 
-    // Card %
-    pctCards += '<div style="background:var(--s2);border-radius:8px;padding:10px 12px;min-width:108px;border:'+border+'">' +
+    var cardPct = '<div style="background:var(--s2);border-radius:8px;padding:10px 12px;min-width:108px;border:'+border+'">' +
       dayLbl +
+      '<div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px">% ĐẠT KPI</div>' +
       '<div style="font-size:19px;font-weight:700;color:'+col+';line-height:1.1">'+(d.dt>0?pct+'%':'--')+'</div>' +
       '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+(d.dt>0?fmtM(d.dt)+' / '+fmtM(d.kpi):'Chưa có data')+'</div>' +
       bar +
-      '<div style="font-size:10px;color:var(--muted)">'+(d.dt>0?(pct>=95?'✅ Đạt':pct>=70?'⚠️ Chưa đạt':'🔴 Cần tăng tốc'):'')+'</div>' +
+      '<div style="font-size:10px;color:'+col+'">'+(d.dt>0?(pct>=95?'✅ Đạt':pct>=70?'⚠️ Chưa đạt':'🔴 Cần tăng tốc'):'')+'</div>' +
     '</div>';
+
+    pairs += '<div style="display:flex;gap:4px;flex-shrink:0">' + cardDT + cardPct + '</div>';
   });
 
-  var row = function(label, content) {
-    return '<div style="margin-bottom:14px">' +
-      '<div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">'+label+'</div>' +
-      '<div style="overflow-x:auto;padding-bottom:4px"><div style="display:flex;gap:6px;min-width:max-content">'+content+'</div></div>' +
-    '</div>';
-  };
-
   wrap.innerHTML = '<div style="margin-top:12px;padding:14px 16px 10px;background:var(--s1);border-radius:10px">' +
-    row('📊 Doanh thu theo ngày', dtCards) +
-    row('% Đạt KPI theo ngày', pctCards) +
+    '<div style="overflow-x:auto;padding-bottom:4px">' +
+      '<div style="display:flex;gap:8px;min-width:max-content">' + pairs + '</div>' +
+    '</div>' +
   '</div>';
 }
 
