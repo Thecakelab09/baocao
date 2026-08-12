@@ -1196,7 +1196,7 @@ function renderKpiOnlineChart(allNgayData) {
   (allNgayData || []).forEach(function(d) { if (d.ngay) dayMap[d.ngay] = d; });
 
   var cards = [];
-  for (var i = 1; i <= TODAY_DAY; i++) {
+  for (var i = selFrom; i <= selTo; i++) {
     var src = dayMap[i] || {};
     cards.push({
       ngay: i,
