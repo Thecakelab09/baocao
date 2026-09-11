@@ -184,6 +184,17 @@
     margin-left: 8px;
   }
 
+  /* TOP SELLERS */
+  .top-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .top-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .top-card-head { background: var(--surface2); padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .top-card-name { font-weight: 700; font-size: 13px; }
+  .top-row { display: flex; align-items: center; gap: 9px; padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .top-row:last-child { border-bottom: none; }
+  .top-rank { font-size: 13px; width: 20px; flex-shrink: 0; text-align: center; }
+  .top-name { flex: 1; font-size: 12px; color: var(--text); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top-qty { font-size: 12px; font-weight: 700; color: var(--accent3); flex-shrink: 0; }
+
   footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); margin-top: 40px; }
   .chip { display: inline-block; padding: 2px 8px; background: var(--surface2); border-radius: 99px; font-size: 11px; color: var(--muted); margin-right: 6px; }
 
@@ -212,6 +223,7 @@
     <div class="tab active" onclick="switchTab('tongquan')">📊 Tổng quan</div>
     <div class="tab" onclick="switchTab('cuahang')">🏪 Cửa hàng</div>
     <div class="tab" onclick="switchTab('nhomhang')">🎂 Nhóm mặt hàng</div>
+    <div class="tab" onclick="switchTab('banchay')">🔥 Bán chạy</div>
     <div class="tab" onclick="switchTab('khach')">👥 Khách hàng</div>
     <div class="tab" onclick="switchTab('online')">🌐 Online</div>
     <div class="tab" onclick="switchTab('sosanh')">📈 So sánh T7→T8</div>
@@ -434,14 +446,150 @@
   <div class="note-box">
     <span class="strong">Bánh kem sinh nhật là nhóm chủ lực</span>, chiếm 54,9% tổng doanh thu trừ ship (1.064,5 tr), gấp hơn 3 lần nhóm lớn thứ hai. Bánh kem nhỏ và Bánh mì đóng góp gần tương đương nhau, tạo thành nhóm doanh thu nền tảng ổn định.
   </div>
+
+  <div class="h2">Doanh thu theo nhóm mặt hàng × Cửa hàng — Tháng 8</div>
+  <div class="section-sub" style="margin-bottom:14px">Bánh sinh nhật · Daily (bánh kem nhỏ, bánh mì, bánh quy, đồ uống, đồ ăn kèm, phụ kiện...) · Seasonal (bánh mùa vụ, đồ ăn đồ uống TM) · Doanh thu trừ phí ship, so với chỉ tiêu tháng</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Cửa hàng</th><th>Bánh sinh nhật</th><th>Daily</th><th>Seasonal</th><th>Tổng</th><th>Chỉ tiêu</th><th>% MT</th></tr></thead>
+      <tbody>
+        <tr><td>🌿 Tuệ Tĩnh</td><td>156,1 tr</td><td>215,7 tr</td><td>8,2 tr</td><td style="font-weight:700">379,9 tr</td><td style="color:var(--muted)">345,0 tr</td><td><span class="badge badge-good">110%</span></td></tr>
+        <tr><td>🏬 TimesCity</td><td>159,5 tr</td><td>153,4 tr</td><td>6,4 tr</td><td style="font-weight:700">319,2 tr</td><td style="color:var(--muted)">308,0 tr</td><td><span class="badge badge-good">104%</span></td></tr>
+        <tr><td>🏠 Trung Hòa</td><td>142,2 tr</td><td>179,1 tr</td><td>6,7 tr</td><td style="font-weight:700">328,0 tr</td><td style="color:var(--muted)">303,0 tr</td><td><span class="badge badge-good">108%</span></td></tr>
+        <tr><td>🌐 Online</td><td>574,2 tr</td><td>204,9 tr</td><td>20,7 tr</td><td style="font-weight:700">799,9 tr</td><td style="color:var(--muted)">719,0 tr</td><td><span class="badge badge-good">111%</span></td></tr>
+        <tr style="font-weight:700"><td>📊 Hệ thống</td><td>1.064,5 tr</td><td>832,6 tr</td><td>42,4 tr</td><td>1.939,5 tr</td><td style="color:var(--muted);font-weight:400">1.800,0 tr</td><td><span class="badge badge-good">108%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="h2">Số đơn theo nhóm mặt hàng × Cửa hàng</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Cửa hàng</th><th>Bánh sinh nhật</th><th>Daily</th><th>Seasonal</th><th>Tổng đơn</th></tr></thead>
+      <tbody>
+        <tr><td>🌿 Tuệ Tĩnh</td><td>284</td><td>1.245</td><td>45</td><td style="font-weight:700">1.449</td></tr>
+        <tr><td>🏬 TimesCity</td><td>278</td><td>1.170</td><td>44</td><td style="font-weight:700">1.394</td></tr>
+        <tr><td>🏠 Trung Hòa</td><td>277</td><td>1.306</td><td>24</td><td style="font-weight:700">1.496</td></tr>
+        <tr><td>🌐 Online</td><td>900</td><td>1.346</td><td>27</td><td style="font-weight:700">1.730</td></tr>
+        <tr style="font-weight:700"><td>📊 Hệ thống</td><td>1.802</td><td>5.634</td><td>146</td><td>6.677</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box" style="font-size:12px">
+    "Số đơn" theo nhóm = số đơn hàng có chứa ít nhất 1 sản phẩm của nhóm đó (1 đơn có thể chứa nhiều nhóm nên tổng các nhóm lớn hơn "Tổng đơn" thực tế của cửa hàng). "Tổng đơn" là số đơn phân biệt (distinct).
+  </div>
+
+  <div class="h2">Giá trị trung bình đơn theo nhóm mặt hàng × Cửa hàng</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Cửa hàng</th><th>Bánh sinh nhật</th><th>Daily</th><th>Seasonal</th><th>GTTB đơn chung</th></tr></thead>
+      <tbody>
+        <tr><td>🌿 Tuệ Tĩnh</td><td>549.648đ</td><td>173.253đ</td><td>182.222đ</td><td style="font-weight:700">262.181đ</td></tr>
+        <tr><td>🏬 TimesCity</td><td>573.741đ</td><td>131.111đ</td><td>145.455đ</td><td style="font-weight:700">228.981đ</td></tr>
+        <tr><td>🏠 Trung Hòa</td><td>513.357đ</td><td>137.136đ</td><td>279.167đ</td><td style="font-weight:700">219.251đ</td></tr>
+        <tr><td>🌐 Online</td><td>638.000đ</td><td>152.229đ</td><td>766.667đ</td><td style="font-weight:700">462.370đ</td></tr>
+        <tr style="font-weight:700"><td>📊 Hệ thống</td><td>590.733đ</td><td>147.781đ</td><td>290.411đ</td><td>290.475đ</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box">
+    <span class="strong">GTTB đơn nhóm Bánh sinh nhật</span> cao gấp 3-4 lần Daily ở mọi kênh — riêng Online đạt 638.000đ nhờ đơn Seasonal (766.667đ) và BSN cao. Daily là nhóm tần suất mua cao nhất nhưng giá trị đơn thấp, đúng đặc tính hàng ngày.
+  </div>
+</div>
+
+<!-- ========== BÁN CHẠY ========== -->
+<div class="section" id="tab-banchay">
+  <div class="month-badge">📅 Tháng 8 · 2026</div>
+  <div class="section-title">Mặt hàng bán chạy</div>
+  <div class="section-sub">Top 5 sản phẩm theo số lượng bán · từng nhóm · từng cửa hàng & Online · Tháng 8/2026</div>
+
+  <div class="h2" style="margin-top:8px">🎂 BSN — Bánh sinh nhật</div>
+  <div class="top-grid">
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🌿 Tuệ Tĩnh</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">BSN Xoài Cheese - Size Couple</span><span class="top-qty">37</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">BSN Xoài Cheese - Size Family (mẫu Dome)</span><span class="top-qty">30</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">BSN Ô Long Nhài Dưa Lưới - Size Family</span><span class="top-qty">21</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">BSN Dâu Kem Trứng Sữa - Size Couple</span><span class="top-qty">19</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">BSN Tiramisu - Size Couple</span><span class="top-qty">18</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🏬 TimesCity</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">BSN Xoài Cheese - Size Family (mẫu Dome)</span><span class="top-qty">43</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">BSN Hoa Quả Phin - Size Family (mẫu Trắng)</span><span class="top-qty">21</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">BSN Tiramisu - Size Family (mẫu Nơ)</span><span class="top-qty">20</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">BSN Chocolate - Size Family (mẫu Phin)</span><span class="top-qty">20</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">BSN Xoài Dừa - Size Family (mẫu Phin)</span><span class="top-qty">19</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🏠 Trung Hòa</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">BSN Xoài Cheese - Size Couple</span><span class="top-qty">33</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">BSN Dâu Kem Trứng Sữa - Size Couple</span><span class="top-qty">27</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">BSN Ô Long Nhài Dưa Lưới - Size Family</span><span class="top-qty">24</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">BSN Nho Sữa Chua - Size Couple</span><span class="top-qty">19</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">BSN Tiramisu - Size Couple</span><span class="top-qty">17</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🌐 Online</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">BSN Xoài Cheese - Size Family (mẫu Dome)</span><span class="top-qty">107</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">BSN Ô Long Nhài Dưa Lưới - Size Family</span><span class="top-qty">66</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">BSN Xoài Cheese - Size Couple</span><span class="top-qty">59</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">BSN Kem Whipping - Size Family</span><span class="top-qty">56</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">BSN Chanh Leo Xoài Dừa - Size Family</span><span class="top-qty">50</span></div></div>
+  </div>
+  <div class="h2" style="margin-top:8px">🍰 Bánh kem nhỏ</div>
+  <div class="top-grid">
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🌿 Tuệ Tĩnh</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Whipping Caramel</span><span class="top-qty">261</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Bánh Tiramisu</span><span class="top-qty">140</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Bánh Hoa Quả Tươi</span><span class="top-qty">113</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Bánh Chocolate Berry</span><span class="top-qty">112</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Bánh Kem Xoài Dừa</span><span class="top-qty">103</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🏬 TimesCity</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Whipping Caramel</span><span class="top-qty">265</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Bánh Su Kem Trứng</span><span class="top-qty">96</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Bánh Tiramisu</span><span class="top-qty">94</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Bánh Sữa Chua Dâu</span><span class="top-qty">73</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Bánh Hoa Quả Tươi</span><span class="top-qty">72</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🏠 Trung Hòa</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Whipping Caramel</span><span class="top-qty">229</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Bánh Chocolate Berry</span><span class="top-qty">115</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Bánh Sữa Chua Dâu</span><span class="top-qty">111</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Bánh Hoa Quả Tươi</span><span class="top-qty">111</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Bánh Trà Nhài Nho Xanh</span><span class="top-qty">106</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🌐 Online</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Whipping Caramel</span><span class="top-qty">86</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Bánh Su Kem Trứng</span><span class="top-qty">84</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Bánh Kem Xoài Dừa</span><span class="top-qty">72</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Bánh Chocolate Berry</span><span class="top-qty">70</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Bánh Hoa Quả Tươi</span><span class="top-qty">64</span></div></div>
+  </div>
+  <div class="h2" style="margin-top:8px">🥖 Bánh mì</div>
+  <div class="top-grid">
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🌿 Tuệ Tĩnh</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Ngàn Lớp Hoa Cúc</span><span class="top-qty">141</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Ngàn Lớp Cuộn Giòn</span><span class="top-qty">103</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Bánh Mì Gối Trắng</span><span class="top-qty">98</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Bánh Ngàn Lớp Trứng Muối</span><span class="top-qty">93</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Bánh Mì Ruốc Heo</span><span class="top-qty">91</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🏬 TimesCity</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Bánh Mì Gối Trắng</span><span class="top-qty">101</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Bánh Ngàn Lớp Trứng Muối</span><span class="top-qty">100</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Bánh Mì Ruốc Heo</span><span class="top-qty">98</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Ngàn Lớp Cuộn Giòn</span><span class="top-qty">85</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Bánh Mì Gối Hạt Nảy Mầm</span><span class="top-qty">70</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🏠 Trung Hòa</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Bánh Mì Ruốc Heo</span><span class="top-qty">87</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Bánh Ngàn Lớp Trứng Muối</span><span class="top-qty">85</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Bánh Mì Kem Sữa Cheese Chà Bông</span><span class="top-qty">83</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Ngàn Lớp Hoa Cúc</span><span class="top-qty">64</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Bánh Bơ Mochi (Butter Ttoek)</span><span class="top-qty">62</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🌐 Online</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Ngàn Lớp Hoa Cúc</span><span class="top-qty">252</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Ngàn Lớp Cuộn Giòn</span><span class="top-qty">242</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Bánh Bơ Mochi (Butter Ttoek)</span><span class="top-qty">157</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Bánh Ngàn Lớp Trứng Muối</span><span class="top-qty">141</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Bánh Mì Bơ Hạnh Nhân</span><span class="top-qty">69</span></div></div>
+  </div>
+  <div class="h2" style="margin-top:8px">🍪 Bánh khác</div>
+  <div class="top-grid">
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🌿 Tuệ Tĩnh</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Bánh Giòn Ngàn Lớp Tẩm Bơ Mật Ong</span><span class="top-qty">69</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Bánh Cookie Lưỡi Mèo 100g</span><span class="top-qty">62</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Bánh Hạnh Nhân Ngói 100g</span><span class="top-qty">46</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Mũ Sinh Nhật</span><span class="top-qty">44</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Set Cookie Mix Vị</span><span class="top-qty">31</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🏬 TimesCity</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Bánh Hạnh Nhân Ngói 100g</span><span class="top-qty">38</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Bánh Cookie Chocolate Ẩm</span><span class="top-qty">35</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Bánh Giòn Ngàn Lớp Tẩm Bơ Mật Ong</span><span class="top-qty">30</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Bánh Cookie Lưỡi Mèo 100g</span><span class="top-qty">29</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Set Cookie Mix Vị</span><span class="top-qty">28</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🏠 Trung Hòa</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Set Cookie Mix Vị</span><span class="top-qty">65</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Ô Long Xoài Lựu</span><span class="top-qty">59</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Hibiscus Mơ Ổi Hồng</span><span class="top-qty">45</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Matcha Latte Đá</span><span class="top-qty">37</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Ô Long Mơ Quýt</span><span class="top-qty">33</span></div></div>
+    <div class="top-card"><div class="top-card-head"><div class="top-card-name">🌐 Online</div></div><div class="top-row"><span class="top-rank">🥇</span><span class="top-name">Bánh Giòn Ngàn Lớp Tẩm Bơ Mật Ong</span><span class="top-qty">37</span></div><div class="top-row"><span class="top-rank">🥈</span><span class="top-name">Set Cookie Mix Vị</span><span class="top-qty">29</span></div><div class="top-row"><span class="top-rank">🥉</span><span class="top-name">Mũ Sinh Nhật</span><span class="top-qty">24</span></div><div class="top-row"><span class="top-rank">4️⃣</span><span class="top-name">Bánh Hạnh Nhân Ngói 100g</span><span class="top-qty">23</span></div><div class="top-row"><span class="top-rank">5️⃣</span><span class="top-name">Bánh Nướng Thập Cẩm Dăm Bông</span><span class="top-qty">19</span></div></div>
+  </div>
+
+  <div class="note-box" style="font-size:12px">
+    Xếp hạng theo số lượng bán (không gồm dòng phí vận chuyển) · Nguồn: Fabi iPOS · Sheet "DỮ LIỆU BÁN" tháng 8/2026.
+  </div>
 </div>
 
 <!-- ========== KHÁCH HÀNG ========== -->
 <div class="section" id="tab-khach">
   <div class="month-badge">📅 Tháng 8 · 2026</div>
   <div class="section-title">Cơ cấu khách hàng Offline</div>
-  <div class="section-sub">Khách cũ, khách mới và tỉ lệ thu thập thông tin liên hệ (KTĐ)</div>
+  <div class="section-sub">Khách cũ, khách mới và tỉ lệ thu thập thông tin liên hệ (KTĐ) — toàn hệ thống</div>
 
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-icon">🧾</div>
+      <div class="kpi-label">Tổng đơn Offline</div>
+      <div class="kpi-value">4.947</div>
+      <div class="kpi-target">= KH cũ + KH mới + Không tích điểm</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-icon">🔄</div>
+      <div class="kpi-label">KH cũ quay lại</div>
+      <div class="kpi-value">1.113 <span style="font-size:14px;color:var(--muted)">(22,5%)</span></div>
+      <div class="kpi-target">≤90 ngày: <b style="color:var(--accent3)">750</b> (67,4%) &nbsp;·&nbsp; &gt;90 ngày: <b style="color:var(--accent)">363</b> (32,6%)</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-icon">🆕</div>
+      <div class="kpi-label">KH mới</div>
+      <div class="kpi-value">2.026 <span style="font-size:14px;color:var(--muted)">(41,0%)</span></div>
+      <div class="kpi-target">&nbsp;</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-icon">❌</div>
+      <div class="kpi-label">Đơn không tích điểm</div>
+      <div class="kpi-value">1.808 <span style="font-size:14px;color:var(--muted)">(36,5%)</span></div>
+      <div class="kpi-target">Không có SĐT</div>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:28px">
+    <div class="h2" style="margin-bottom:16px">Cơ cấu đơn hàng Offline · Tháng 8 · 4.947 đơn</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:12px;color:var(--accent3);min-width:130px">🔄 KH cũ</span>
+      <div style="flex:1;height:8px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden"><div style="width:22.5%;height:100%;background:var(--accent3);border-radius:99px"></div></div>
+      <span style="font-size:13px;font-weight:600;color:var(--accent3);min-width:110px;text-align:right">1.113 (22,5%)</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:12px;color:var(--accent);min-width:130px">🆕 KH mới</span>
+      <div style="flex:1;height:8px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden"><div style="width:41%;height:100%;background:var(--accent);border-radius:99px"></div></div>
+      <span style="font-size:13px;font-weight:600;color:var(--accent);min-width:110px;text-align:right">2.026 (41,0%)</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:12px;color:var(--red);min-width:130px">❌ Không TD</span>
+      <div style="flex:1;height:8px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden"><div style="width:36.5%;height:100%;background:var(--red);border-radius:99px"></div></div>
+      <span style="font-size:13px;font-weight:600;color:var(--red);min-width:110px;text-align:right">1.808 (36,5%)</span>
+    </div>
+  </div>
+
+  <div class="h2">Chi tiết theo cửa hàng</div>
   <div class="table-wrap">
     <table>
       <thead><tr><th>Cửa hàng</th><th>Tổng đơn</th><th>KH cũ</th><th>KH mới</th><th>Không tích điểm</th><th>KH cũ quay lại ≤90 ngày</th></tr></thead>
@@ -450,6 +598,7 @@
         <tr><td>🏬 TimesCity</td><td>1.394</td><td>460 (33%)</td><td>492 (35%)</td><td>442 (32%)</td><td>281/460 (61%)</td></tr>
         <tr><td>🏪 Phan Bội Châu</td><td>608</td><td>41 (7%)</td><td>180 (30%)</td><td>387 (64%)</td><td>23/41 (56%)</td></tr>
         <tr><td>🏠 Trung Hòa</td><td>1.496</td><td>242 (16%)</td><td>669 (45%)</td><td>585 (39%)</td><td>192/242 (79%)</td></tr>
+        <tr style="font-weight:700"><td>📊 Hệ thống</td><td>4.947</td><td>1.113 (22,5%)</td><td>2.026 (41,0%)</td><td>1.808 (36,5%)</td><td>750/1.113 (67,4%)</td></tr>
       </tbody>
     </table>
   </div>
@@ -555,7 +704,7 @@
 
 <script>
 function switchTab(id) {
-  const ids = ['tongquan','cuahang','nhomhang','khach','online','sosanh','danhgia'];
+  const ids = ['tongquan','cuahang','nhomhang','banchay','khach','online','sosanh','danhgia'];
   document.querySelectorAll('.tab').forEach((t, i) => {
     t.classList.toggle('active', ids[i] === id);
   });
