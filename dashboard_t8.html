@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cake Lab — Dashboard Tháng 8/2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap');
+
+  :root {
+    --bg: #0f0e11;
+    --surface: #1a1820;
+    --surface2: #231f2e;
+    --border: rgba(255,255,255,0.07);
+    --accent: #f5c842;
+    --accent2: #ff8c5a;
+    --accent3: #7ee8a2;
+    --accent4: #60c4f7;
+    --red: #ff5c5c;
+    --text: #f0ecff;
+    --muted: #8b879d;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,14,17,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; align-items: center; gap: 0;
+  }
+  .nav-brand {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    color: var(--accent);
+    padding: 14px 0;
+    margin-right: 20px;
+    white-space: nowrap;
+  }
+  .nav-back { font-size: 12px; color: var(--muted); text-decoration: none; margin-right: 20px; transition: color .15s; white-space: nowrap; }
+  .nav-back:hover { color: var(--text); }
+  .nav-tabs {
+    display: flex; gap: 2px; flex: 1; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 14px 16px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* SECTIONS */
+  .section { display: none; padding: 28px 24px; max-width: 1200px; margin: 0 auto; }
+  .section.active { display: block; }
+
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 300;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .section-sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+
+  /* KPI GRID */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent);
+  }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card.green::before { background: var(--accent3); }
+  .kpi-card.blue::before { background: var(--accent4); }
+  .kpi-card.orange::before { background: var(--accent2); }
+  .kpi-icon { font-size: 22px; margin-bottom: 10px; }
+  .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 6px; }
+  .kpi-value { font-size: 22px; font-weight: 700; line-height: 1.1; margin-bottom: 4px; }
+  .kpi-target { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .progress-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; background: var(--accent); transition: width .8s ease; }
+  .kpi-pct { font-size: 12px; font-weight: 600; margin-top: 6px; }
+  .pct-good { color: var(--accent3); }
+  .pct-warn { color: var(--accent); }
+  .pct-bad { color: var(--red); }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: var(--surface2); }
+  th { padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  td { padding: 12px 16px; border-top: 1px solid var(--border); white-space: nowrap; }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .badge-good { background: rgba(126,232,162,.15); color: var(--accent3); }
+  .badge-warn { background: rgba(245,200,66,.15); color: var(--accent); }
+  .badge-bad { background: rgba(255,92,92,.15); color: var(--red); }
+
+  /* STORE CARDS */
+  .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .store-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .store-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .store-icon { width: 36px; height: 36px; background: var(--surface2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .store-name { font-weight: 700; font-size: 15px; }
+  .store-addr { font-size: 11px; color: var(--muted); }
+  .store-metric { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .store-metric-label { color: var(--muted); }
+  .store-metric-value { font-weight: 600; }
+
+  /* DIAG / NOTE CARDS */
+  .h2 { font-size: 16px; font-weight: 700; margin-bottom: 14px; color: var(--text); }
+  .note-box { background: var(--surface); border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; padding: 14px 16px; font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+  .strong { color: var(--text); font-weight: 600; }
+
+  .assess-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  @media (max-width: 720px) { .assess-grid { grid-template-columns: 1fr; } }
+  .assess-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .assess-card.good { border-top: 2px solid var(--accent3); }
+  .assess-card.bad { border-top: 2px solid var(--red); }
+  .assess-title { font-weight: 700; font-size: 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .assess-item { font-size: 13px; color: var(--muted); line-height: 1.65; padding: 10px 0; border-top: 1px solid var(--border); }
+  .assess-item:first-of-type { border-top: none; padding-top: 0; }
+
+  /* GROWTH STRIP */
+  .growth-strip { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 28px; position: relative; overflow: hidden; }
+  .growth-strip::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: linear-gradient(90deg, var(--accent3), var(--accent)); }
+  .growth-big { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 600; color: var(--accent3); margin-bottom: 4px; }
+  .growth-path { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .growth-desc { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .growth-foot { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--muted); line-height: 1.6; }
+
+  /* MONTH BADGE */
+  .month-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, rgba(245,200,66,.15), rgba(245,200,66,.05));
+    border: 1px solid rgba(245,200,66,.3);
+    padding: 4px 12px; border-radius: 99px;
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .closed-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,92,92,.1);
+    border: 1px solid rgba(255,92,92,.3);
+    padding: 2px 10px; border-radius: 99px;
+    font-size: 10.5px; font-weight: 600; color: var(--red);
+    margin-left: 8px;
+  }
+
+  footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); margin-top: 40px; }
+  .chip { display: inline-block; padding: 2px 8px; background: var(--surface2); border-radius: 99px; font-size: 11px; color: var(--muted); margin-right: 6px; }
+
+  @media(max-width:640px){
+    nav{padding:0 14px}
+    .section{padding:18px 14px}
+    .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<script>
+// AUTH GUARD — BGĐ only
+(function() {
+  const raw = sessionStorage.getItem('tcl_user');
+  if (!raw) { window.location.replace('login.html'); return; }
+  const user = JSON.parse(raw);
+  if (user.role !== 'bgd') { window.location.replace('login.html'); return; }
+})();
+</script>
+
+<nav>
+  <div class="nav-brand">🎂 The Cake Lab</div>
+  <a class="nav-back" href="index.html">← Trang chủ</a>
+  <div class="nav-tabs">
+    <div class="tab active" onclick="switchTab('tongquan')">📊 Tổng quan</div>
+    <div class="tab" onclick="switchTab('cuahang')">🏪 Cửa hàng</div>
+    <div class="tab" onclick="switchTab('nhomhang')">🎂 Nhóm mặt hàng</div>
+    <div class="tab" onclick="switchTab('khach')">👥 Khách hàng</div>
+    <div class="tab" onclick="switchTab('online')">🌐 Online</div>
+    <div class="tab" onclick="switchTab('sosanh')">📈 So sánh T7→T8</div>
+    <div class="tab" onclick="switchTab('danhgia')">🔍 Đánh giá</div>
+  </div>
+<button onclick="(function(){sessionStorage.removeItem('tcl_user');window.location.href='login.html';})()" style="padding:5px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#8b879d;font-size:12px;font-weight:500;cursor:pointer;font-family:'Be Vietnam Pro',sans-serif;margin-left:12px" onmouseover="this.style.color='#ff5c5c';this.style.borderColor='rgba(255,92,92,.4)'" onmouseout="this.style.color='#8b879d';this.style.borderColor='rgba(255,255,255,.12)'">Đăng xuất</button>
+</nav>
+
+<!-- ========== TỔNG QUAN ========== -->
+<div class="section active" id="tab-tongquan">
+  <div class="month-badge">📅 Tháng 8 · 2026</div>
+  <div class="section-title">Dashboard Tháng 8 / 2026</div>
+  <div class="section-sub">Kết quả thực hiện so với chỉ tiêu · Toàn hệ thống 4 cửa hàng offline + kênh Online</div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">Doanh thu toàn hệ thống</div>
+      <div class="kpi-value">1.939,5 tr</div>
+      <div class="kpi-target">Mục tiêu: 1.800,0 tr</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+      <div class="kpi-pct pct-good">✅ 108% mục tiêu</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-icon">🏪</div>
+      <div class="kpi-label">Offline (4 cửa hàng)</div>
+      <div class="kpi-value">1.139,6 tr</div>
+      <div class="kpi-target">Mục tiêu: 1.081,0 tr</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:100%; background:var(--accent2)"></div></div>
+      <div class="kpi-pct pct-good">✅ 105% mục tiêu</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-icon">🌐</div>
+      <div class="kpi-label">Online</div>
+      <div class="kpi-value">799,9 tr</div>
+      <div class="kpi-target">Mục tiêu: 719,0 tr</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:100%; background:var(--accent4)"></div></div>
+      <div class="kpi-pct pct-good">✅ 111% mục tiêu</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-icon">🎂</div>
+      <div class="kpi-label">Tổng BSN</div>
+      <div class="kpi-value">1.831 cái</div>
+      <div class="kpi-target">Chỉ tiêu: 1.531</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:100%; background:var(--accent3)"></div></div>
+      <div class="kpi-pct pct-good">✅ 120% hoàn thành</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">📣</div>
+      <div class="kpi-label">Lead về / Chỉ tiêu</div>
+      <div class="kpi-value">7.720 / 7.408</div>
+      <div class="kpi-target">&nbsp;</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+      <div class="kpi-pct pct-good">104% hoàn thành</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-icon">🧾</div>
+      <div class="kpi-label">Đơn Offline về / Chỉ tiêu</div>
+      <div class="kpi-value">4.947 / 5.140</div>
+      <div class="kpi-target">&nbsp;</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:96%; background:var(--accent2)"></div></div>
+      <div class="kpi-pct pct-warn">96% hoàn thành</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-icon">🛍️</div>
+      <div class="kpi-label">Đơn Online về / Chỉ tiêu</div>
+      <div class="kpi-value">1.730 / 1.926</div>
+      <div class="kpi-target">&nbsp;</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:90%; background:var(--accent4)"></div></div>
+      <div class="kpi-pct pct-warn">90% hoàn thành</div>
+    </div>
+  </div>
+
+  <div class="growth-strip">
+    <div class="growth-big">+25,0%</div>
+    <div class="growth-path">1.551,3 tr → 1.939,5 tr &nbsp;·&nbsp; Tăng trưởng so với tháng 7</div>
+    <div class="growth-desc">Toàn hệ thống tăng trưởng rõ rệt so với tháng 7 ở cả hai kênh: Offline tăng 22,2% (932,9 tr → 1.139,6 tr), Online tăng 29,3% (618,5 tr → 799,9 tr). Mức hoàn thành mục tiêu chung tăng từ 86% lên 108%, vượt chỉ tiêu 1.800,0 tr khoảng 139,5 triệu đồng.</div>
+    <div class="growth-foot">Doanh thu toàn hệ thống (1.939,5 tr) là doanh thu đã trừ phí ship. Doanh thu iPOS (gộp phí ship): 1.973,4 tr · Doanh thu trừ phí ship và VAT 8%: 1.795,8 tr</div>
+  </div>
+
+  <div class="h2">Doanh thu & Contribution theo cửa hàng — Tháng 8</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Cửa hàng</th><th>Tổng SL bán</th><th>DT gross</th><th>DT net</th>
+        <th>Trừ phí ship</th><th>Trừ ship & VAT</th><th>Tổng Contribution</th><th>Blended CM%</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>🌿 Tuệ Tĩnh</td><td>3.514</td><td>402,1 tr</td><td>380,7 tr</td><td>379,9 tr</td><td>351,8 tr</td><td>249,0 tr</td><td><span class="badge badge-good">65,4%</span></td></tr>
+        <tr><td>🏬 TimesCity</td><td>2.790</td><td>341,9 tr</td><td>320,0 tr</td><td>319,2 tr</td><td>295,5 tr</td><td>210,1 tr</td><td><span class="badge badge-good">65,7%</span></td></tr>
+        <tr><td>🏠 Trung Hòa</td><td>3.388</td><td>358,7 tr</td><td>329,9 tr</td><td>328,0 tr</td><td>303,7 tr</td><td>209,5 tr</td><td><span class="badge badge-good">63,5%</span></td></tr>
+        <tr><td>🏪 Phan Bội Châu <span class="closed-badge">Đóng cửa 30/8</span></td><td>1.305</td><td>119,0 tr</td><td>112,6 tr</td><td>112,4 tr</td><td>104,1 tr</td><td>71,6 tr</td><td><span class="badge badge-good">63,6%</span></td></tr>
+        <tr><td>🌐 Online</td><td>4.325</td><td>880,5 tr</td><td>830,2 tr</td><td>799,9 tr</td><td>740,7 tr</td><td>553,7 tr</td><td><span class="badge badge-good">66,7%</span></td></tr>
+        <tr style="font-weight:700"><td>📊 TỔNG</td><td>15.322</td><td>2.102,1 tr</td><td>1.973,4 tr</td><td>1.939,5 tr</td><td>1.795,8 tr</td><td>1.293,9 tr</td><td><span class="badge badge-good">65,6%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box">
+    <span class="strong">Cách tính Contribution:</span> Doanh thu Gross = Thành tiền trước giảm giá · Doanh thu Net = Tổng tiền · Trừ phí ship = Doanh thu Net − doanh thu mã 20102003 (phí vận chuyển) · Trừ ship & VAT = (Doanh thu Net − phí ship) / 1,08 · Tổng Contribution = Doanh thu trừ ship & VAT − Cost (nguyên liệu + bao bì / cái, hoặc %DT với SP đặc biệt).
+  </div>
+</div>
+
+<!-- ========== CỬA HÀNG ========== -->
+<div class="section" id="tab-cuahang">
+  <div class="month-badge">📅 Tháng 8 · 2026</div>
+  <div class="section-title">Các cửa hàng Offline</div>
+  <div class="section-sub">Kết quả doanh thu và tỉ lệ chốt đơn theo từng cửa hàng</div>
+
+  <div class="store-grid">
+    <div class="store-card">
+      <div class="store-header">
+        <div class="store-icon">🌿</div>
+        <div><div class="store-name">Tuệ Tĩnh</div><div class="store-addr">CS1 · 45 Tuệ Tĩnh</div></div>
+      </div>
+      <div class="store-metric"><span class="store-metric-label">Doanh thu</span><span class="store-metric-value">379,9 tr</span></div>
+      <div class="store-metric"><span class="store-metric-label">Mục tiêu</span><span class="store-metric-value" style="color:var(--muted)">345,0 tr</span></div>
+      <div class="store-metric"><span class="store-metric-label">% MT</span><span class="badge badge-good">110%</span></div>
+      <div class="store-metric"><span class="store-metric-label">Tỉ lệ chốt</span><span class="store-metric-value">98%</span></div>
+    </div>
+    <div class="store-card">
+      <div class="store-header">
+        <div class="store-icon">🏬</div>
+        <div><div class="store-name">TimesCity</div><div class="store-addr">CS2 · Park 7 TimesCity</div></div>
+      </div>
+      <div class="store-metric"><span class="store-metric-label">Doanh thu</span><span class="store-metric-value">319,2 tr</span></div>
+      <div class="store-metric"><span class="store-metric-label">Mục tiêu</span><span class="store-metric-value" style="color:var(--muted)">308,0 tr</span></div>
+      <div class="store-metric"><span class="store-metric-label">% MT</span><span class="badge badge-good">104%</span></div>
+      <div class="store-metric"><span class="store-metric-label">Tỉ lệ chốt</span><span class="store-metric-value">97%</span></div>
+    </div>
+    <div class="store-card">
+      <div class="store-header">
+        <div class="store-icon">🏪</div>
+        <div><div class="store-name">Phan Bội Châu <span class="closed-badge">Đóng cửa 30/8</span></div><div class="store-addr">CS3 · 3A Phan Bội Châu</div></div>
+      </div>
+      <div class="store-metric"><span class="store-metric-label">Doanh thu</span><span class="store-metric-value">112,4 tr</span></div>
+      <div class="store-metric"><span class="store-metric-label">Mục tiêu</span><span class="store-metric-value" style="color:var(--muted)">125,0 tr</span></div>
+      <div class="store-metric"><span class="store-metric-label">% MT</span><span class="badge badge-bad">90%</span></div>
+      <div class="store-metric"><span class="store-metric-label">Tỉ lệ chốt</span><span class="store-metric-value">97%</span></div>
+    </div>
+    <div class="store-card">
+      <div class="store-header">
+        <div class="store-icon">🏠</div>
+        <div><div class="store-name">Trung Hòa</div><div class="store-addr">CS4 · 26 Trung Hòa</div></div>
+      </div>
+      <div class="store-metric"><span class="store-metric-label">Doanh thu</span><span class="store-metric-value">328,0 tr</span></div>
+      <div class="store-metric"><span class="store-metric-label">Mục tiêu</span><span class="store-metric-value" style="color:var(--muted)">303,0 tr</span></div>
+      <div class="store-metric"><span class="store-metric-label">% MT</span><span class="badge badge-good">108%</span></div>
+      <div class="store-metric"><span class="store-metric-label">Tỉ lệ chốt</span><span class="store-metric-value">97%</span></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Cửa hàng</th><th>DT thực tế</th><th>Mục tiêu</th><th>% MT</th><th>Tỉ lệ chốt</th></tr></thead>
+      <tbody>
+        <tr><td>🌿 Tuệ Tĩnh</td><td>379,9 tr</td><td>345,0 tr</td><td><span class="badge badge-good">110%</span></td><td>98%</td></tr>
+        <tr><td>🏬 TimesCity</td><td>319,2 tr</td><td>308,0 tr</td><td><span class="badge badge-good">104%</span></td><td>97%</td></tr>
+        <tr><td>🏪 Phan Bội Châu</td><td>112,4 tr</td><td>125,0 tr</td><td><span class="badge badge-bad">90%</span></td><td>97%</td></tr>
+        <tr><td>🏠 Trung Hòa</td><td>328,0 tr</td><td>303,0 tr</td><td><span class="badge badge-good">108%</span></td><td>97%</td></tr>
+        <tr style="font-weight:700"><td>TỔNG</td><td>1.139,6 tr</td><td>1.081,0 tr</td><td><span class="badge badge-good">105%</span></td><td>97,3%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note-box">
+    Toàn hệ thống bứt phá mạnh trong tháng 8: cả 4 cửa hàng đều đạt trên 90% mục tiêu, dẫn đầu là <span class="strong">Tuệ Tĩnh (110%)</span> và <span class="strong">Trung Hòa (108%)</span>. PBC là cửa hàng duy nhất chưa đạt mục tiêu (90%) dù tỉ lệ chốt đơn tại quầy vẫn ở mức cao (97%) — cửa hàng chính thức đóng cửa từ 30/8. Tỉ lệ chốt đơn toàn hệ thống duy trì ổn định quanh 97%, cho thấy năng lực tư vấn tại quầy đồng đều giữa các cửa hàng.
+  </div>
+</div>
+
+<!-- ========== NHÓM MẶT HÀNG ========== -->
+<div class="section" id="tab-nhomhang">
+  <div class="month-badge">📅 Tháng 8 · 2026</div>
+  <div class="section-title">Báo cáo theo nhóm mặt hàng</div>
+  <div class="section-sub">Doanh thu, sản lượng và tỉ suất đóng góp (Contribution Margin) theo nhóm sản phẩm</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Nhóm mặt hàng</th><th>Tổng SL bán</th><th>DT gross</th><th>DT net</th>
+        <th>Trừ phí ship</th><th>Trừ ship & VAT</th><th>Tổng Contribution</th><th>Blended CM%</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>🎁 Bánh kem sinh nhật</td><td>1.933</td><td>1.088,9 tr</td><td>1.064,5 tr</td><td>1.064,5 tr</td><td>985,6 tr</td><td>768,0 tr</td><td><span class="badge badge-good">72,1%</span></td></tr>
+        <tr><td>🎂 Bánh kem nhỏ</td><td>5.407</td><td>373,9 tr</td><td>351,5 tr</td><td>351,5 tr</td><td>325,5 tr</td><td>195,5 tr</td><td><span class="badge badge-warn">55,6%</span></td></tr>
+        <tr><td>🥐 Bánh mì</td><td>4.498</td><td>364,9 tr</td><td>344,9 tr</td><td>344,9 tr</td><td>319,4 tr</td><td>230,2 tr</td><td><span class="badge badge-good">66,7%</span></td></tr>
+        <tr><td>🍪 Bánh quy</td><td>1.156</td><td>111,1 tr</td><td>100,3 tr</td><td>100,3 tr</td><td>92,9 tr</td><td>72,4 tr</td><td><span class="badge badge-good">72,2%</span></td></tr>
+        <tr><td>🥮 Bánh mùa vụ</td><td>7</td><td>0,6 tr</td><td>0,6 tr</td><td>0,6 tr</td><td>0,6 tr</td><td>0,3 tr</td><td><span class="badge badge-warn">53,2%</span></td></tr>
+        <tr><td>🥤 Đồ uống</td><td>370</td><td>18,9 tr</td><td>18,2 tr</td><td>18,2 tr</td><td>16,8 tr</td><td>13,4 tr</td><td><span class="badge badge-good">74,1%</span></td></tr>
+        <tr><td>🥮 Đồ ăn, đồ uống TM</td><td>451</td><td>49,2 tr</td><td>41,9 tr</td><td>41,9 tr</td><td>38,8 tr</td><td>2,9 tr</td><td><span class="badge badge-bad">6,9%</span></td></tr>
+        <tr><td>🫙 Đồ ăn kèm</td><td>141</td><td>5,8 tr</td><td>4,5 tr</td><td>4,5 tr</td><td>4,2 tr</td><td>2,0 tr</td><td><span class="badge badge-bad">43,0%</span></td></tr>
+        <tr><td>📦 Bán thành phẩm</td><td>6</td><td>0,1 tr</td><td>0,0 tr</td><td>0,0 tr</td><td>0,0 tr</td><td>0,0 tr</td><td><span class="badge badge-good">88,4%</span></td></tr>
+        <tr><td>🎀 Phụ kiện</td><td>1.353</td><td>88,8 tr</td><td>46,9 tr</td><td>13,0 tr</td><td>12,1 tr</td><td>9,1 tr</td><td><span class="badge badge-bad">19,5%</span></td></tr>
+        <tr style="font-weight:700"><td>📊 TỔNG</td><td>15.322</td><td>2.102,1 tr</td><td>1.973,4 tr</td><td>1.939,5 tr</td><td>1.795,8 tr</td><td>1.293,9 tr</td><td><span class="badge badge-good">65,6%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box">
+    <span class="strong">Bánh trung thu (Đồ ăn đồ uống TM) contribution thấp</span> do đầu mùa gửi tặng doanh nghiệp dùng thử và mời dùng thử tại cửa hàng. Tháng 9 CM% sẽ cao hơn.
+  </div>
+
+  <div class="h2">Cơ cấu doanh thu theo nhóm sản phẩm</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Nhóm mặt hàng</th><th>Doanh thu iPOS</th><th>Trừ ship</th><th>Trừ ship + VAT</th><th>Tỉ trọng</th></tr></thead>
+      <tbody>
+        <tr><td>🎁 Bánh kem sinh nhật</td><td>1.064,5 tr</td><td>1.064,5 tr</td><td>985,6 tr</td><td><span class="badge badge-good">54,9%</span></td></tr>
+        <tr><td>🎂 Bánh kem nhỏ</td><td>351,5 tr</td><td>351,5 tr</td><td>325,5 tr</td><td>18,1%</td></tr>
+        <tr><td>🥐 Bánh mì</td><td>344,9 tr</td><td>344,9 tr</td><td>319,4 tr</td><td>17,8%</td></tr>
+        <tr><td>🍪 Bánh quy</td><td>100,3 tr</td><td>100,3 tr</td><td>92,9 tr</td><td>5,2%</td></tr>
+        <tr><td>🥮 Đồ ăn, đồ uống TM</td><td>41,9 tr</td><td>41,9 tr</td><td>38,8 tr</td><td>2,2%</td></tr>
+        <tr><td>🥤 Đồ uống</td><td>18,2 tr</td><td>18,2 tr</td><td>16,8 tr</td><td>0,9%</td></tr>
+        <tr><td>🎀 Khác*</td><td>52,1 tr</td><td>18,2 tr</td><td>16,9 tr</td><td>0,9%</td></tr>
+        <tr style="font-weight:700"><td>TỔNG</td><td>1.973,4 tr</td><td>1.939,5 tr</td><td>1.795,8 tr</td><td>100%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box" style="font-size:12px">
+    *Khác: Phụ kiện, Đồ ăn kèm, Bánh mùa vụ, Bán thành phẩm. Cột "Trừ ship" đã loại phí vận chuyển (mã 20102003); cột "Trừ ship + VAT" tiếp tục chia cho 1,08.
+  </div>
+  <div class="note-box">
+    <span class="strong">Bánh kem sinh nhật là nhóm chủ lực</span>, chiếm 54,9% tổng doanh thu trừ ship (1.064,5 tr), gấp hơn 3 lần nhóm lớn thứ hai. Bánh kem nhỏ và Bánh mì đóng góp gần tương đương nhau, tạo thành nhóm doanh thu nền tảng ổn định.
+  </div>
+</div>
+
+<!-- ========== KHÁCH HÀNG ========== -->
+<div class="section" id="tab-khach">
+  <div class="month-badge">📅 Tháng 8 · 2026</div>
+  <div class="section-title">Cơ cấu khách hàng Offline</div>
+  <div class="section-sub">Khách cũ, khách mới và tỉ lệ thu thập thông tin liên hệ (KTĐ)</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Cửa hàng</th><th>Tổng đơn</th><th>KH cũ</th><th>KH mới</th><th>Không tích điểm</th><th>KH cũ quay lại ≤90 ngày</th></tr></thead>
+      <tbody>
+        <tr><td>🌿 Tuệ Tĩnh</td><td>1.449</td><td>370 (26%)</td><td>685 (47%)</td><td>394 (27%)</td><td>254/370 (69%)</td></tr>
+        <tr><td>🏬 TimesCity</td><td>1.394</td><td>460 (33%)</td><td>492 (35%)</td><td>442 (32%)</td><td>281/460 (61%)</td></tr>
+        <tr><td>🏪 Phan Bội Châu</td><td>608</td><td>41 (7%)</td><td>180 (30%)</td><td>387 (64%)</td><td>23/41 (56%)</td></tr>
+        <tr><td>🏠 Trung Hòa</td><td>1.496</td><td>242 (16%)</td><td>669 (45%)</td><td>585 (39%)</td><td>192/242 (79%)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note-box">
+    <span class="strong">TimesCity dẫn đầu hệ thống về tỉ lệ khách cũ (33%)</span>, cho thấy nền tảng khách hàng trung thành tốt nhất hệ thống.
+  </div>
+  <div class="note-box">
+    <span class="strong">Trung Hòa</span> có tổng đơn lớn nhất nhưng tỉ lệ khách cũ lại thấp nhất (16%) — phần lớn đến từ khách mới (45%), cần chú trọng hơn vào giữ chân khách hàng.
+  </div>
+  <div class="note-box">
+    <span class="strong">Tuệ Tĩnh</span> có tỉ lệ không tích điểm thấp nhất hệ thống (27%), cho thấy hiệu quả thu thập thông tin khách hàng tại quầy tốt nhất; PBC (đã đóng cửa) có tỉ lệ không tích điểm cao nhất (64%).
+  </div>
+</div>
+
+<!-- ========== ONLINE ========== -->
+<div class="section" id="tab-online">
+  <div class="month-badge">📅 Tháng 8 · 2026</div>
+  <div class="section-title">Kênh Online</div>
+  <div class="section-sub">Kết quả thực hiện so với KPI tháng 8/2026</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Chỉ số</th><th>Thực tế</th><th>KPI</th><th>% HT</th></tr></thead>
+      <tbody>
+        <tr><td>Tổng lead</td><td>7.720</td><td>7.408</td><td><span class="badge badge-good">104%</span></td></tr>
+        <tr><td>Tốc độ phản hồi</td><td>TB 2p33s</td><td>≤ 2 phút</td><td><span class="badge badge-bad">Không đạt</span></td></tr>
+        <tr><td>Tỉ lệ chốt đơn</td><td>22,4%</td><td>≥ 26%</td><td><span class="badge badge-bad">Chưa đạt</span></td></tr>
+        <tr><td>GTTB đơn Daily</td><td>189 nghìn</td><td>212 nghìn</td><td><span class="badge badge-warn">89%</span></td></tr>
+        <tr><td>Số BSN</td><td>918</td><td>796</td><td><span class="badge badge-good">115%</span></td></tr>
+        <tr style="font-weight:700"><td>DOANH THU ONLINE</td><td>799,9 tr</td><td>719,0 tr</td><td><span class="badge badge-good">111%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
+    <div class="kpi-card red">
+      <div class="kpi-label">Tỉ lệ chốt đơn</div>
+      <div class="kpi-value">24,6% → 22,4%</div>
+      <div class="kpi-pct pct-bad">-2,2% · giảm so với tháng 7, chưa đạt mục tiêu kế hoạch (≥26%, 86% HT)</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">GTTB đơn Daily</div>
+      <div class="kpi-value">209 nghìn → 189 nghìn</div>
+      <div class="kpi-pct pct-warn">Giảm 9,6% · chưa đạt mục tiêu 212 nghìn (89% HT)</div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    Doanh thu Online tiếp tục vượt mục tiêu mạnh (111% HT) nhờ BSN tăng trưởng tốt (115% HT, đạt 918 cái). Tỉ lệ chốt đơn giảm so với tháng 7 và chưa đạt mục tiêu kế hoạch (22,4% so với ≥26%, đạt 86% HT). Điểm cần lưu ý: GTTB đơn Daily tiếp tục giảm (209 nghìn → 189 nghìn), chưa đạt mục tiêu 212 nghìn; tốc độ phản hồi cũng chậm hơn mốc chuẩn (TB 2p33s so với ≤2 phút), cần được ưu tiên cải thiện trong tháng 9.
+  </div>
+</div>
+
+<!-- ========== SO SÁNH ========== -->
+<div class="section" id="tab-sosanh">
+  <div class="month-badge">📅 Tháng 8 · 2026</div>
+  <div class="section-title">So sánh Tháng 7 → Tháng 8</div>
+  <div class="section-sub">Mức tăng trưởng theo từng chỉ số</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Chỉ tiêu</th><th>Tháng 7</th><th>Tháng 8</th><th>Tăng trưởng</th></tr></thead>
+      <tbody>
+        <tr><td>Doanh thu Hệ thống</td><td>1.551,3 tr</td><td>1.939,5 tr</td><td><span class="badge badge-good">+25,0%</span></td></tr>
+        <tr><td>Doanh thu Offline</td><td>932,9 tr</td><td>1.139,6 tr</td><td><span class="badge badge-good">+22,2%</span></td></tr>
+        <tr><td>Doanh thu Online</td><td>618,5 tr</td><td>799,9 tr</td><td><span class="badge badge-good">+29,3%</span></td></tr>
+        <tr><td>Tỉ lệ chốt đơn Online</td><td>24,6%</td><td>22,4%</td><td><span class="badge badge-bad">-8,9%</span></td></tr>
+        <tr><td>Số BSN</td><td>1.324</td><td>1.831</td><td><span class="badge badge-good">+38,3%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ========== ĐÁNH GIÁ ========== -->
+<div class="section" id="tab-danhgia">
+  <div class="month-badge">📅 Tháng 8 · 2026</div>
+  <div class="section-title">Đánh giá tổng thể tháng 8</div>
+  <div class="section-sub">Điểm mạnh và điểm cần cải thiện</div>
+
+  <div class="assess-grid">
+    <div class="assess-card good">
+      <div class="assess-title" style="color:var(--accent3)">✅ Điểm mạnh</div>
+      <div class="assess-item">Toàn hệ thống tăng trưởng +25,0% so với T7, mức hoàn thành mục tiêu tăng từ 86% lên 108%</div>
+      <div class="assess-item">Doanh thu Offline và Online đều vượt mục tiêu (105% và 111% HT)</div>
+      <div class="assess-item">BSN vượt chỉ tiêu ở cả Offline (124% HT) và Online (115% HT)</div>
+    </div>
+    <div class="assess-card bad">
+      <div class="assess-title" style="color:var(--red)">⚠️ Điểm cần cải thiện</div>
+      <div class="assess-item">Tỉ lệ chốt đơn Online giảm so với T7 (24,6% → 22,4%) — lead về tăng cao đến một mức nhất định sẽ ảnh hưởng đến chất lượng lead. Cần tối ưu thêm.</div>
+      <div class="assess-item">PBC là cửa hàng duy nhất chưa đạt mục tiêu doanh thu (90% HT) trước khi đóng cửa từ 30/8</div>
+      <div class="assess-item">Tốc độ phản hồi Online chưa đạt chuẩn (TB 2p33s so với ≤2 phút), GTTB đơn Daily Online cần đẩy mạnh đạt cao hơn</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span class="chip">🎂 The Cake Lab</span>
+  <span class="chip">Dashboard Tháng 8/2026</span>
+  <span class="chip">Báo cáo kết quả kinh doanh</span>
+  <br><br>
+  © 2026 The Cake Lab · Hệ thống quản lý nội bộ
+</footer>
+
+<script>
+function switchTab(id) {
+  const ids = ['tongquan','cuahang','nhomhang','khach','online','sosanh','danhgia'];
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ids[i] === id);
+  });
+  document.querySelectorAll('.section').forEach(s => {
+    s.classList.toggle('active', s.id === 'tab-' + id);
+  });
+}
+
+// Animate progress bars on load
+document.addEventListener('DOMContentLoaded', () => {
+  const fills = document.querySelectorAll('.progress-fill');
+  fills.forEach(f => {
+    const w = f.style.width;
+    f.style.width = '0';
+    setTimeout(() => { f.style.width = w; }, 200);
+  });
+});
+</script>
+</body>
+</html>
