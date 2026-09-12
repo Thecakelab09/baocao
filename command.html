@@ -468,6 +468,16 @@ var NGAY_CON = TONG_NGAY - TODAY_DAY;
 var selFrom = 1, selTo = TODAY_DAY, selLabel = 'Tháng này';
 var selStore = null; // null = tất cả, hoặc 'tueTinh'/'timesCity'/'pbc'/'trungHoa'
 
+// PBC đóng cửa từ 30/8/2026 — từ T9 trở đi không còn dữ liệu/hiển thị PBC.
+// T6/T7/T8 vẫn giữ nguyên PBC như cũ.
+function isPbcActive() { return ACTIVE_MONTH < 9; }
+function filterStores(arr) {
+  return isPbcActive() ? arr : arr.filter(function(s) { return s.key !== 'pbc'; });
+}
+function filterStoreKeys(arr) {
+  return isPbcActive() ? arr : arr.filter(function(k) { return k !== 'pbc'; });
+}
+
 function switchMonth(m) {
   var cfg = MONTH_CONFIG[m];
   if (!cfg || !cfg.url) { return; } // Tháng chưa có dữ liệu — không làm gì
@@ -660,12 +670,12 @@ function renderMultiMonth(fromISO, toISO) {
   var soNgay = days.length;
   var soNgayCoData = days.filter(function(d){ return d.offline.dt>0 || d.online.dt>0; }).length;
 
-  var stores = [
+  var stores = filterStores([
     {key:'tueTinh', name:'Tuệ Tĩnh', color:'var(--green)'},
     {key:'timesCity', name:'TimesCity', color:'var(--blue)'},
     {key:'pbc', name:'PBC', color:'var(--accent)'},
     {key:'trungHoa', name:'Trung Hòa', color:'var(--yellow)'},
-  ];
+  ]);
 
   var storeRows = stores.map(function(s) {
     var offDtS = sum(days, 'offline.'+s.key+'.dt'), offDonS = sum(days, 'offline.'+s.key+'.don');
@@ -971,6 +981,17 @@ function renderAll(data) {
   renderBanChayOnline();
   renderItemsDistribution();
   applyStoreFilter();
+  applyPbcVisibility();
+}
+
+// PBC đóng cửa từ 30/8/2026 — ẩn nút filter + cột PBC trong bảng từ T9 trở đi.
+// T6/T7/T8 không đổi.
+function applyPbcVisibility() {
+  var hide = !isPbcActive();
+  document.querySelectorAll('[data-store="pbc"], #sf-pbc').forEach(function(el) {
+    el.style.display = hide ? 'none' : '';
+  });
+  if (hide && selStore === 'pbc') setStoreFilter(null);
 }
 
 var STORE_NAMES = { tueTinh: 'Tuệ Tĩnh', timesCity: 'TimesCity', pbc: 'PBC', trungHoa: 'Trung Hòa' };
@@ -993,6 +1014,7 @@ function setStoreFilter(storeKey, switchToTab) {
   else if (switchToTab === 'offline') switchTab('offline');
 
   applyStoreFilter();
+  applyPbcVisibility();
 }
 
 function applyStoreFilter() {
@@ -1293,12 +1315,12 @@ var BC_SHOW_DEFAULT = 3;
 function pctStr(n, total) { return total > 0 ? Math.round(n/total*100) : 0; }
 
 function renderKHReturnDaily() {
-  var storesMeta = [
+  var storesMeta = filterStores([
     {key:'tueTinh',  label:'CS1 · Tuệ Tĩnh',  color:'var(--green)'},
     {key:'timesCity',label:'CS2 · TimesCity', color:'var(--blue)'},
     {key:'pbc',      label:'CS3 · PBC',       color:'var(--orange)'},
     {key:'trungHoa', label:'CS4 · Trung Hòa', color:'var(--accent)'},
-  ];
+  ]);
   var maxDay = 31; // hiển thị hết các ngày có data thực tế (không giới hạn cứng 16)
 
   var html = storesMeta.map(function(s) {
@@ -1338,12 +1360,12 @@ function renderItemsDistribution() {
   var D = ITEMS_DIST_DATA;
   if (!D) return;
 
-  var storesMeta = [
+  var storesMeta = filterStores([
     {key:'tueTinh',  name:'Tuệ Tĩnh',  label:'CS1 · Tuệ Tĩnh',  color:'var(--green)'},
     {key:'timesCity',name:'TimesCity', label:'CS2 · TimesCity', color:'var(--blue)'},
     {key:'pbc',      name:'PBC',       label:'CS3 · PBC',       color:'var(--orange)'},
     {key:'trungHoa', name:'Trung Hòa', label:'CS4 · Trung Hòa', color:'var(--accent)'},
-  ];
+  ]);
 
   // ── Theo từng ngày từng cửa hàng (dạng cột, dễ đọc trên mobile) ──
   var maxDay = 31; // hiển thị hết các ngày có data thực tế (không giới hạn cứng 16)
@@ -1396,12 +1418,12 @@ function renderBanChay() {
   if (subEl) subEl.textContent = hasFabiTop
     ? 'Real-time · Fabi_TatCaCuaHang · theo ngày đã chọn'
     : 'Theo ngày đã chọn · Google Sheet T6';
-  var stores = [
+  var stores = filterStores([
     {key:'tueTinh',  name:'Tuệ Tĩnh',  color:'var(--green)'},
     {key:'timesCity',name:'TimesCity', color:'var(--blue)'},
     {key:'pbc',      name:'PBC',       color:'var(--orange)'},
     {key:'trungHoa', name:'Trung Hòa', color:'var(--accent)'},
-  ];
+  ]);
   var medals = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
   var html = '';
 
@@ -1485,12 +1507,12 @@ function renderBanChayOnline() {
     return;
   }
 
-  var stores = [
+  var stores = filterStores([
     {key:'tueTinh',  name:'Tuệ Tĩnh',  color:'var(--green)'},
     {key:'timesCity',name:'TimesCity', color:'var(--blue)'},
     {key:'pbc',      name:'PBC',       color:'var(--orange)'},
     {key:'trungHoa', name:'Trung Hòa', color:'var(--accent)'},
-  ];
+  ]);
   var medals = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
   var html = '';
 
@@ -1658,12 +1680,12 @@ function renderKhachHang() {
     '</div>';
 
   // CH cards — thêm tỉ lệ tích điểm
-  var stores = [
+  var stores = filterStores([
     {key:'tueTinh',  name:'Tuệ Tĩnh',  color:'var(--green)'},
     {key:'timesCity',name:'TimesCity',  color:'var(--blue)'},
     {key:'pbc',      name:'PBC',        color:'var(--orange)'},
     {key:'trungHoa', name:'Trung Hòa',  color:'var(--accent)'},
-  ];
+  ]);
   var el = document.getElementById('kh-ch-cards');
   if (!el) return;
   el.innerHTML = stores.map(function(s) {
@@ -1789,12 +1811,12 @@ function renderKhachHang() {
 }
 
 function renderOffline(data) {
-  var stores = [
+  var stores = filterStores([
     {key:'tueTinh',  name:'Tuệ Tĩnh',  color:'var(--green)',  ch:data.tueTinh||{}},
     {key:'timesCity',name:'TimesCity',  color:'var(--blue)',   ch:data.timesCity||{}},
     {key:'pbc',      name:'PBC',        color:'var(--orange)', ch:data.pbc||{}},
     {key:'trungHoa', name:'Trung Hòa',  color:'var(--accent)', ch:data.trungHoa||{}},
-  ];
+  ]);
 
   // Tổng offline - dùng tổng tháng từ sheet (không filter theo ngày vì dùng tổng tháng)
   var totDT = 0, totMT = 0, totDon = 0, totBSN = 0;
