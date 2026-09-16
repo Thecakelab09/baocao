@@ -195,6 +195,15 @@
   .top-name { flex: 1; font-size: 12px; color: var(--text); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .top-qty { font-size: 12px; font-weight: 700; color: var(--accent3); flex-shrink: 0; }
 
+  /* FUNNEL BOXES — Doanh thu gross → ... → Contribution */
+  .funnel-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 10px; }
+  @media (max-width: 900px) { .funnel-grid { grid-template-columns: repeat(2, 1fr); } }
+  .funnel-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; position: relative; }
+  .funnel-box.final { border-color: rgba(126,232,162,.35); background: linear-gradient(160deg, rgba(126,232,162,.08), var(--surface)); }
+  .funnel-lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 8px; line-height: 1.4; min-height: 28px; display: flex; align-items: center; justify-content: center; }
+  .funnel-val { font-size: 19px; font-weight: 700; color: var(--text); }
+  .funnel-box.final .funnel-val { color: var(--accent3); }
+
   footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); margin-top: 40px; }
   .chip { display: inline-block; padding: 2px 8px; background: var(--surface2); border-radius: 99px; font-size: 11px; color: var(--muted); margin-right: 6px; }
 
@@ -237,6 +246,33 @@
   <div class="month-badge">📅 Tháng 8 · 2026</div>
   <div class="section-title">Dashboard Tháng 8 / 2026</div>
   <div class="section-sub">Kết quả thực hiện so với chỉ tiêu · Toàn hệ thống 4 cửa hàng offline + kênh Online</div>
+
+  <div class="h2" style="margin-top:0">① Doanh thu → Contribution · Hệ thống</div>
+  <div class="funnel-grid">
+    <div class="funnel-box">
+      <div class="funnel-lbl">Doanh thu gross</div>
+      <div class="funnel-val">2.102,1 tr</div>
+    </div>
+    <div class="funnel-box">
+      <div class="funnel-lbl">DT Net</div>
+      <div class="funnel-val">1.973,4 tr</div>
+    </div>
+    <div class="funnel-box">
+      <div class="funnel-lbl">DT trừ phí vận chuyển</div>
+      <div class="funnel-val">1.939,5 tr</div>
+    </div>
+    <div class="funnel-box">
+      <div class="funnel-lbl">DT trừ PVC và VAT</div>
+      <div class="funnel-val">1.795,8 tr</div>
+    </div>
+    <div class="funnel-box final">
+      <div class="funnel-lbl">Contribution</div>
+      <div class="funnel-val">1.293,9 tr</div>
+    </div>
+  </div>
+  <div class="note-box" style="font-size:12px;margin-bottom:28px">
+    PVC = phí vận chuyển (mã 20102003). DT trừ PVC và VAT = (DT trừ phí vận chuyển) / 1,08. Contribution = DT trừ PVC và VAT − Cost (nguyên liệu + bao bì/cái, hoặc %DT với SP đặc biệt).
+  </div>
 
   <div class="kpi-grid">
     <div class="kpi-card">
