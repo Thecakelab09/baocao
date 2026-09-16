@@ -219,6 +219,23 @@
   .chbox tr.row-daily td:first-child { color: var(--accent4); }
   .chbox tr.row-seasonal td:first-child { color: var(--accent2); }
 
+  /* KHÁCH HÀNG — per-store card, giống T1 Command Center */
+  .ch-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .ch-head { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .ch-name { font-weight: 700; font-size: 14px; }
+  .ch-body { padding: 18px; }
+  .ch-metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+  .ch-metric-box { background: var(--surface2); border-radius: 10px; padding: 11px; text-align: center; }
+  .ch-metric-lbl { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
+  .ch-metric-val { font-size: 17px; font-weight: 800; }
+  .ch-metric-sub { font-size: 9.5px; color: var(--muted); margin-top: 2px; }
+  .ch-cu-box { background: rgba(126,232,162,.06); border: 1px solid rgba(126,232,162,.18); border-radius: 8px; padding: 10px 12px; }
+  .ch-cu-title { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .ch-cu-split { display: flex; gap: 8px; }
+  .ch-cu-item { flex: 1; background: var(--surface2); border-radius: 7px; padding: 7px; text-align: center; }
+  .ch-cu-item .n { font-size: 13px; font-weight: 700; }
+  .ch-cu-item .l { font-size: 9px; color: var(--muted); margin-top: 1px; }
+
   footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); margin-top: 40px; }
   .chip { display: inline-block; padding: 2px 8px; background: var(--surface2); border-radius: 99px; font-size: 11px; color: var(--muted); margin-right: 6px; }
 
@@ -619,8 +636,8 @@
 <!-- ========== KHÁCH HÀNG ========== -->
 <div class="section" id="tab-khach">
   <div class="month-badge">📅 Tháng 8 · 2026</div>
-  <div class="section-title">Cơ cấu khách hàng Offline</div>
-  <div class="section-sub">Khách cũ, khách mới và tỉ lệ thu thập thông tin liên hệ (KTĐ) — toàn hệ thống</div>
+  <div class="section-title">④ Khách hàng</div>
+  <div class="section-sub">Giống Khách hàng bên T1 Command Center · Khách cũ, khách mới, tỉ lệ thu thập thông tin liên hệ (KTĐ)</div>
 
   <div class="kpi-grid">
     <div class="kpi-card blue">
@@ -668,18 +685,91 @@
     </div>
   </div>
 
-  <div class="h2">Chi tiết theo cửa hàng</div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Cửa hàng</th><th>Tổng đơn</th><th>KH cũ</th><th>KH mới</th><th>Không tích điểm</th><th>KH cũ quay lại ≤90 ngày</th></tr></thead>
-      <tbody>
-        <tr><td>🌿 Tuệ Tĩnh</td><td>1.449</td><td>370 (26%)</td><td>685 (47%)</td><td>394 (27%)</td><td>254/370 (69%)</td></tr>
-        <tr><td>🏬 TimesCity</td><td>1.394</td><td>460 (33%)</td><td>492 (35%)</td><td>442 (32%)</td><td>281/460 (61%)</td></tr>
-        <tr><td>🏪 Phan Bội Châu</td><td>608</td><td>41 (7%)</td><td>180 (30%)</td><td>387 (64%)</td><td>23/41 (56%)</td></tr>
-        <tr><td>🏠 Trung Hòa</td><td>1.496</td><td>242 (16%)</td><td>669 (45%)</td><td>585 (39%)</td><td>192/242 (79%)</td></tr>
-        <tr style="font-weight:700"><td>📊 Hệ thống</td><td>4.947</td><td>1.113 (22,5%)</td><td>2.026 (41,0%)</td><td>1.808 (36,5%)</td><td>750/1.113 (67,4%)</td></tr>
-      </tbody>
-    </table>
+  <div class="h2">④ Khách hàng theo từng cửa hàng</div>
+  <div class="chbox-grid">
+    <div class="ch-card">
+      <div class="ch-head" style="border-left:3px solid var(--accent3)">
+        <div class="ch-name" style="color:var(--accent3)">Khách hàng Tuệ Tĩnh</div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-metric-grid">
+          <div class="ch-metric-box"><div class="ch-metric-lbl">Tổng đơn</div><div class="ch-metric-val" style="color:var(--accent3)">1.449</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">KH cũ</div><div class="ch-metric-val">370</div><div class="ch-metric-sub">26%</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">KH mới</div><div class="ch-metric-val">685</div><div class="ch-metric-sub">47%</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">Không TĐ</div><div class="ch-metric-val" style="color:var(--red)">394</div><div class="ch-metric-sub">27%</div></div>
+        </div>
+        <div class="ch-cu-box">
+          <div class="ch-cu-title">🔄 KH cũ quay lại — 370</div>
+          <div class="ch-cu-split">
+            <div class="ch-cu-item"><div class="n" style="color:var(--accent3)">254</div><div class="l">≤90 ngày · 69%</div></div>
+            <div class="ch-cu-item"><div class="n" style="color:var(--accent)">116</div><div class="l">&gt;90 ngày · 31%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ch-card">
+      <div class="ch-head" style="border-left:3px solid var(--accent4)">
+        <div class="ch-name" style="color:var(--accent4)">Khách hàng TimesCity</div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-metric-grid">
+          <div class="ch-metric-box"><div class="ch-metric-lbl">Tổng đơn</div><div class="ch-metric-val" style="color:var(--accent4)">1.394</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">KH cũ</div><div class="ch-metric-val">460</div><div class="ch-metric-sub">33%</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">KH mới</div><div class="ch-metric-val">492</div><div class="ch-metric-sub">35%</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">Không TĐ</div><div class="ch-metric-val" style="color:var(--red)">442</div><div class="ch-metric-sub">32%</div></div>
+        </div>
+        <div class="ch-cu-box">
+          <div class="ch-cu-title">🔄 KH cũ quay lại — 460</div>
+          <div class="ch-cu-split">
+            <div class="ch-cu-item"><div class="n" style="color:var(--accent3)">281</div><div class="l">≤90 ngày · 61%</div></div>
+            <div class="ch-cu-item"><div class="n" style="color:var(--accent)">179</div><div class="l">&gt;90 ngày · 39%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ch-card">
+      <div class="ch-head" style="border-left:3px solid var(--accent2)">
+        <div class="ch-name" style="color:var(--accent2)">Khách hàng Phan Bội Châu <span class="closed-badge">Đóng cửa 30/8</span></div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-metric-grid">
+          <div class="ch-metric-box"><div class="ch-metric-lbl">Tổng đơn</div><div class="ch-metric-val" style="color:var(--accent2)">608</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">KH cũ</div><div class="ch-metric-val">41</div><div class="ch-metric-sub">7%</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">KH mới</div><div class="ch-metric-val">180</div><div class="ch-metric-sub">30%</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">Không TĐ</div><div class="ch-metric-val" style="color:var(--red)">387</div><div class="ch-metric-sub">64%</div></div>
+        </div>
+        <div class="ch-cu-box">
+          <div class="ch-cu-title">🔄 KH cũ quay lại — 41</div>
+          <div class="ch-cu-split">
+            <div class="ch-cu-item"><div class="n" style="color:var(--accent3)">23</div><div class="l">≤90 ngày · 56%</div></div>
+            <div class="ch-cu-item"><div class="n" style="color:var(--accent)">18</div><div class="l">&gt;90 ngày · 44%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ch-card">
+      <div class="ch-head" style="border-left:3px solid var(--accent)">
+        <div class="ch-name" style="color:var(--accent)">Khách hàng Trung Hòa</div>
+      </div>
+      <div class="ch-body">
+        <div class="ch-metric-grid">
+          <div class="ch-metric-box"><div class="ch-metric-lbl">Tổng đơn</div><div class="ch-metric-val" style="color:var(--accent)">1.496</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">KH cũ</div><div class="ch-metric-val">242</div><div class="ch-metric-sub">16%</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">KH mới</div><div class="ch-metric-val">669</div><div class="ch-metric-sub">45%</div></div>
+          <div class="ch-metric-box"><div class="ch-metric-lbl">Không TĐ</div><div class="ch-metric-val" style="color:var(--red)">585</div><div class="ch-metric-sub">39%</div></div>
+        </div>
+        <div class="ch-cu-box">
+          <div class="ch-cu-title">🔄 KH cũ quay lại — 242</div>
+          <div class="ch-cu-split">
+            <div class="ch-cu-item"><div class="n" style="color:var(--accent3)">192</div><div class="l">≤90 ngày · 79%</div></div>
+            <div class="ch-cu-item"><div class="n" style="color:var(--accent)">50</div><div class="l">&gt;90 ngày · 21%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="note-box">
