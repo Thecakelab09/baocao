@@ -1291,7 +1291,7 @@ function renderKpiOnlineChart(allNgayData) {
     return;
   }
 
-  function pColor(p) { return p >= 95 ? 'var(--green)' : p >= 70 ? 'var(--accent)' : 'var(--red)'; }
+  function pColor(p) { return p >= 100 ? 'var(--green)' : 'var(--red)'; }
 
   var pairs = '';
   cards.forEach(function(d) {
@@ -1318,7 +1318,7 @@ function renderKpiOnlineChart(allNgayData) {
       '<div style="font-size:19px;font-weight:700;color:'+col+';line-height:1.1">'+(d.dt>0?pct+'%':'--')+'</div>' +
       '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+(d.dt>0?fmtM(d.dt)+' / '+fmtM(d.kpi):'Chưa có data')+'</div>' +
       bar +
-      '<div style="font-size:10px;color:'+col+'">'+(d.dt>0?(pct>=95?'✅ Đạt':pct>=70?'⚠️ Chưa đạt':'🔴 Cần tăng tốc'):'')+'</div>' +
+      '<div style="font-size:10px;color:'+col+'">'+(d.dt>0?(pct>=100?'✅ Đạt':'🔴 Không đạt'):'')+'</div>' +
     '</div>';
 
     pairs += '<div style="display:flex;gap:4px;flex-shrink:0">' + cardDT + cardPct + '</div>';
