@@ -43,6 +43,10 @@ function doGet(e) {
     // Đọc Fabi_TatCaCuaHang 1 lần duy nhất, chia sẻ cho 4 hàm Fabi để tránh đọc 4 lần
     var fabiSh = ss.getSheetByName('Fabi_TatCaCuaHang');
     var fabiRows = fabiSh ? fabiSh.getDataRange().getDisplayValues() : null;
+    // Tính lịch sử "ngày mua gần nhất" (mở chéo 3 sheet tháng trước) 1 lần
+    // duy nhất, chia sẻ cho cả readFabiKHClassification lẫn
+    // readFabiKHOnlineClassification — tránh mở chéo 3 sheet đó 2 lần.
+    var khHistorySeed = loadKHHistorySeed_(ss, fabiRows);
     var result = {
       tueTinh:   readCH(ss, 'Tuệ Tĩnh T9'),
       timesCity: readCH(ss, 'Timescity T9'),
@@ -54,8 +58,8 @@ function doGet(e) {
       fabiTop:        readFabiTopProducts(ss, fabiRows),
       fabiTopOnline:  readFabiTopOnlineProducts(ss, fabiRows),
       fabiKPI:   readFabiKPI(ss, fabiRows),
-      fabiKH:       readFabiKHClassification(ss, fabiRows),
-      fabiKHOnline: readFabiKHOnlineClassification(ss, fabiRows),
+      fabiKH:       readFabiKHClassification(ss, fabiRows, khHistorySeed),
+      fabiKHOnline: readFabiKHOnlineClassification(ss, fabiRows, khHistorySeed),
       fabiItems: readFabiItemsDistribution(ss, fabiRows),
     };
     var json = JSON.stringify(result);
@@ -821,9 +825,34 @@ function readFabiKPI(ss, fabiRows) {
 // =============================================================
 // FABI_TATCACUAHANG — Phân loại KH cũ/mới/Không TĐ theo ngày, theo CH
 // =============================================================
-// Đọc lịch sử mua hàng T3-T5/2026 (sheet LichSuKH_T3T4T5) để "mồi" trước khi
-// tính KH cũ/mới cho tháng 6 — tránh nhận nhầm khách quay lại sau 1-3 tháng
-// thành "KH mới" chỉ vì Fabi_TatCaCuaHang không còn giữ data tháng cũ.
+// Mỗi tháng là 1 Google Sheet RIÊNG (tab Fabi_TatCaCuaHang của tháng hiện tại
+// chỉ chứa dữ liệu tháng đó) — nên để tính KH cũ/mới đúng, phải MỞ CHÉO sang
+// 3 Google Sheet của 3 tháng liền trước để lấy "ngày mua gần nhất" thật.
+// ⚠️ Khi đổi ACTIVE_MONTH sang tháng mới: bỏ tháng cũ nhất trong danh sách
+// dưới, thêm ID sheet của tháng vừa kết thúc vào cuối.
+var PREV_MONTHS_SHEETS = [
+  { id: '1XNQuwfKnXzOjs1PN7FkVS3LpNhHwLLwQ7UWaowJWq8A', month: 6, year: 2026 }, // T6/2026
+  { id: '1FC-n5zjfAiS2Jz50bR5AArEJwkDnPt-HnMczjZmcisc', month: 7, year: 2026 }, // T7/2026
+  { id: '14C9Wy9kcsqmUpCtFNEJ0xW5THlJqr7ZnikUGROFLRWs', month: 8, year: 2026 }, // T8/2026
+];
+
+// Chạy 1 lần thủ công để xin quyền truy cập 3 Google Sheet tháng trước
+// (bắt buộc trước khi loadKHHistorySeed_ có thể mở chéo được).
+function authorizeHistorySheets() {
+  PREV_MONTHS_SHEETS.forEach(function(src) {
+    try {
+      var extSS = SpreadsheetApp.openById(src.id);
+      var extSh = extSS.getSheetByName('Fabi_TatCaCuaHang');
+      Logger.log('T' + src.month + ': ' + (extSh ? 'OK, ' + extSh.getLastRow() + ' dòng' : 'KHÔNG THẤY TAB Fabi_TatCaCuaHang'));
+    } catch (err) {
+      Logger.log('T' + src.month + ': LỖI mở sheet ' + src.id + ' — ' + err);
+    }
+  });
+}
+
+// Đọc lịch sử mua hàng để "mồi" trước khi tính KH cũ/mới cho tháng hiện tại
+// — tránh nhận nhầm khách quay lại sau 1-3 tháng thành "KH mới", hoặc tính
+// sai khoảng cách ngày mua (gap) vì không thấy được lần mua gần nhất thật.
 function loadKHHistorySeed_(ss, fabiRows) {
   function toAbsDay(y, m, d) {
     return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
@@ -831,7 +860,7 @@ function loadKHHistorySeed_(ss, fabiRows) {
 
   var seed = {}; // key = ch+'_'+sdt -> absDay
 
-  // ── Nguồn 1: LichSuKH_T3T4T5 (sheet tổng hợp lịch sử cũ) ──
+  // ── Nguồn 1: LichSuKH_T3T4T5 (sheet tổng hợp lịch sử cũ, mồi nền T3-T5) ──
   var sh = ss.getSheetByName('LichSuKH_T3T4T5');
   if (sh) {
     var v = sh.getDataRange().getDisplayValues();
@@ -849,44 +878,51 @@ function loadKHHistorySeed_(ss, fabiRows) {
     }
   }
 
-  // ── Nguồn 2: Fabi_TatCaCuaHang — quét T6, T7 & T8/2026 ──
-  var COL_CH    = 0;
-  var COL_NGUON = 8;
-  var COL_MAHD  = 11;
-  var COL_NGAY  = 13;
-  var COL_SDT   = 37;
-  var SEED_YEAR = 2026;
-  var SEED_MONTHS = { 6: true, 7: true, 8: true };
+  // ── Nguồn 2: mở chéo sang Google Sheet của 3 tháng liền trước (xem
+  // PREV_MONTHS_SHEETS) — vì mỗi tháng là 1 file riêng nên không thể tự tìm
+  // ra lịch sử T6-T8 chỉ từ trong file tháng hiện tại. ──
+  var COL_CH   = 0;
+  var COL_MAHD = 11;
+  var COL_NGAY = 13;
+  var COL_SDT  = 37;
 
-  var fv = fabiRows;
-  if (!fv) {
-    var fsh = ss.getSheetByName('Fabi_TatCaCuaHang');
-    if (fsh) fv = fsh.getDataRange().getDisplayValues();
+  function normCH(raw) {
+    var n = String(raw||'').trim().toUpperCase()
+      .replace(/[àáảãạăắằẳẵặâấầẩẫậ]/gi,'A').replace(/[đ]/gi,'D');
+    if (n.indexOf('CS1') !== -1) return 'tueTinh';
+    if (n.indexOf('CS2') !== -1) return 'timesCity';
+    if (n.indexOf('CS3') !== -1) return 'pbc';
+    if (n.indexOf('CS4') !== -1) return 'trungHoa';
+    return null;
+  }
+  function parseDate2(val) {
+    var s = String(val || '').trim();
+    var mp2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (mp2) return { year:parseInt(mp2[1]), month:parseInt(mp2[2]), day:parseInt(mp2[3]) };
+    mp2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (mp2) return { day:parseInt(mp2[1]), month:parseInt(mp2[2]), year:parseInt(mp2[3]) };
+    return null;
   }
 
-  if (fv) {
-    function normCH(raw) {
-      var n = String(raw||'').trim().toUpperCase()
-        .replace(/[àáảãạăắằẳẵặâấầẩẫậ]/gi,'A').replace(/[đ]/gi,'D');
-      if (n.indexOf('CS1') !== -1) return 'tueTinh';
-      if (n.indexOf('CS2') !== -1) return 'timesCity';
-      if (n.indexOf('CS3') !== -1) return 'pbc';
-      if (n.indexOf('CS4') !== -1) return 'trungHoa';
-      return null;
+  PREV_MONTHS_SHEETS.forEach(function(src) {
+    var fv;
+    try {
+      var extSS = SpreadsheetApp.openById(src.id);
+      var extSh = extSS.getSheetByName('Fabi_TatCaCuaHang');
+      if (!extSh) return;
+      fv = extSh.getDataRange().getDisplayValues();
+    } catch (err) {
+      // Không mở được (chưa cấp quyền, đổi ID, sheet bị xoá...) — bỏ qua,
+      // không để lỗi 1 tháng làm hỏng cả doGet.
+      Logger.log('loadKHHistorySeed_: lỗi mở sheet T' + src.month + ' — ' + err);
+      return;
     }
-    function parseDate2(val) {
-      var s = String(val || '').trim();
-      var mp2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (mp2) return { year:parseInt(mp2[1]), month:parseInt(mp2[2]), day:parseInt(mp2[3]) };
-      mp2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-      if (mp2) return { day:parseInt(mp2[1]), month:parseInt(mp2[2]), year:parseInt(mp2[3]) };
-      return null;
-    }
+
     var invoiceSeen = {};
-    for (var r2 = 2; r2 < fv.length; r2++) {
+    for (var r2 = 1; r2 < fv.length; r2++) {
       var row = fv[r2];
       var dateObj = parseDate2(row[COL_NGAY]);
-      if (!dateObj || dateObj.year !== SEED_YEAR || !SEED_MONTHS[dateObj.month]) continue;
+      if (!dateObj || dateObj.year !== src.year || dateObj.month !== src.month) continue;
       var maHD = String(row[COL_MAHD] || '').trim();
       if (!maHD || invoiceSeen[maHD]) continue;
       invoiceSeen[maHD] = true;
@@ -900,12 +936,12 @@ function loadKHHistorySeed_(ss, fabiRows) {
       var key2 = chKey + '_' + sdt2;
       if (seed[key2] === undefined || absDay2 > seed[key2]) seed[key2] = absDay2;
     }
-  }
+  });
 
   return seed;
 }
 
-function readFabiKHClassification(ss, fabiRows) {
+function readFabiKHClassification(ss, fabiRows, historySeedIn) {
   var v = fabiRows;
   if (!v) {
     var sh = ss.getSheetByName('Fabi_TatCaCuaHang');
@@ -964,7 +1000,7 @@ function readFabiKHClassification(ss, fabiRows) {
     return s;
   }
 
-  var historySeed = loadKHHistorySeed_(ss, v);
+  var historySeed = historySeedIn || loadKHHistorySeed_(ss, v);
 
   var invoiceMap = {};
   for (var r = startRow; r < v.length; r++) {
@@ -1066,7 +1102,7 @@ function readFabiKHClassification(ss, fabiRows) {
 // FABI_TATCACUAHANG — Phân loại KH cũ/mới · ONLINE (không offline)
 // Seed lịch sử từ TẤT CẢ nguồn trong LichSuKH_T3T4T5
 // =============================================================
-function readFabiKHOnlineClassification(ss, fabiRows) {
+function readFabiKHOnlineClassification(ss, fabiRows, historySeedIn) {
   var v = fabiRows;
   if (!v) {
     var sh = ss.getSheetByName('Fabi_TatCaCuaHang');
@@ -1101,8 +1137,8 @@ function readFabiKHOnlineClassification(ss, fabiRows) {
     return s;
   }
 
-  // Seed lastSeenAbsDay từ lịch sử T3-T7 — TẤT CẢ nguồn (bỏ qua phần ch_, chỉ lấy sdt)
-  var historySeed = loadKHHistorySeed_(ss, v);
+  // Seed lastSeenAbsDay từ lịch sử — TẤT CẢ nguồn (bỏ qua phần ch_, chỉ lấy sdt)
+  var historySeed = historySeedIn || loadKHHistorySeed_(ss, v);
   var lastSeenAbsDay = {};
   for (var hKey in historySeed) {
     var underIdx = hKey.indexOf('_');
