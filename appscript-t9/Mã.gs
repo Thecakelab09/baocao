@@ -836,6 +836,21 @@ var PREV_MONTHS_SHEETS = [
   { id: '14C9Wy9kcsqmUpCtFNEJ0xW5THlJqr7ZnikUGROFLRWs', month: 8, year: 2026 }, // T8/2026
 ];
 
+// Định nghĩa "KH cũ quay lại ≤90 ngày" theo đúng nghiệp vụ (không phải đếm
+// đúng 90 ngày lịch): khách có hoá đơn trong 1 trong 3 tháng liền trước
+// (T6/T7/T8) = ≤90 ngày · khách chỉ có hoá đơn từ tháng 5 trở về trước
+// (không xuất hiện ở T6-T8) = >90 ngày. Mốc cắt = ngày 1 của tháng sớm
+// nhất trong PREV_MONTHS_SHEETS (hiện là 1/6/2026) — tự tính min, không
+// phụ thuộc thứ tự phần tử trong mảng.
+var KH_RECENT_CUTOFF_ABSDAY = (function() {
+  var minAbsDay = Infinity;
+  PREV_MONTHS_SHEETS.forEach(function(src) {
+    var d = Math.floor(Date.UTC(src.year, src.month - 1, 1) / 86400000);
+    if (d < minAbsDay) minAbsDay = d;
+  });
+  return minAbsDay;
+})();
+
 // Chạy 1 lần thủ công để xin quyền truy cập 3 Google Sheet tháng trước
 // (bắt buộc trước khi loadKHHistorySeed_ có thể mở chéo được).
 function authorizeHistorySheets() {
@@ -1068,9 +1083,10 @@ function readFabiKHClassification(ss, fabiRows, historySeedIn) {
       if (lastSeenAbsDay[inv.sdt] === undefined) {
         agg.donMoi++;
       } else {
-        var gap = inv.absDay - lastSeenAbsDay[inv.sdt];
         agg.donCu++;
-        if (gap <= 90) agg.cu90++;
+        // ≤90 ngày = lần mua gần nhất rơi vào T6/T7/T8 (hoặc trong chính
+        // tháng đang xét) · >90 ngày = lần mua gần nhất từ T5 trở về trước.
+        if (lastSeenAbsDay[inv.sdt] >= KH_RECENT_CUTOFF_ABSDAY) agg.cu90++;
         else agg.cuGt90++;
       }
       lastSeenAbsDay[inv.sdt] = inv.absDay;
@@ -1186,9 +1202,10 @@ function readFabiKHOnlineClassification(ss, fabiRows, historySeedIn) {
     if (lastSeenAbsDay[inv.sdt] === undefined) {
       agg.donMoi++;
     } else {
-      var gap = inv.absDay - lastSeenAbsDay[inv.sdt];
       agg.donCu++;
-      if (gap <= 90) agg.cu90++;
+      // ≤90 ngày = lần mua gần nhất rơi vào T6/T7/T8 (hoặc trong chính
+      // tháng đang xét) · >90 ngày = lần mua gần nhất từ T5 trở về trước.
+      if (lastSeenAbsDay[inv.sdt] >= KH_RECENT_CUTOFF_ABSDAY) agg.cu90++;
       else agg.cuGt90++;
     }
     lastSeenAbsDay[inv.sdt] = inv.absDay;
