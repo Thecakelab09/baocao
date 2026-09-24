@@ -480,7 +480,8 @@ function importOnlineFromFabi() {
       bills[maHD].push(r);
     });
 
-    var totalDon = 0, dtTong = 0, soBSN = 0, dtBSN = 0, dtDaily = 0;
+    var totalDon = 0, dtTong = 0, soBSN = 0, dtBSN = 0, dtDaily = 0, dtTrungThu = 0;
+    var donTrungThuHasTM = {}, donTrungThuHasNonTM = {};
     var perCH = {
       tueTinh:   { dt: 0, don: 0 },
       timesCity: { dt: 0, don: 0 },
@@ -494,17 +495,28 @@ function importOnlineFromFabi() {
         return String(r[iNhomMon]).trim() === 'BÁNH KEM SINH NHẬT';
       });
 
-      var tongTT = 0, bsnTT = 0;
+      // FIX: trừ cả BSN lẫn Trung Thu (TM) khỏi Daily — trước đây chỉ trừ
+      // BSN nên doanh thu bánh Trung Thu bị tính lẫn vào Daily.
+      var tongTT = 0, bsnTT = 0, tmTT = 0;
       billRows.forEach(function(r) {
         var tt = parseMoney(r[iTongTien]);
+        var nhom = String(r[iNhomMon]).trim();
         tongTT += tt;
-        if (String(r[iNhomMon]).trim() === 'BÁNH KEM SINH NHẬT') bsnTT += tt;
+        if (nhom === 'BÁNH KEM SINH NHẬT') bsnTT += tt;
+        var isTM = nhom === NHOM_TRUNG_THU;
+        if (isTM) {
+          tmTT += tt;
+          donTrungThuHasTM[maHD] = true;
+        } else {
+          donTrungThuHasNonTM[maHD] = true;
+        }
       });
 
       totalDon++;
       dtTong += tongTT;
       if (hasBSN) { soBSN++; dtBSN += bsnTT; }
-      dtDaily += (tongTT - bsnTT);
+      dtTrungThu += tmTT;
+      dtDaily += (tongTT - bsnTT - tmTT);
 
       // Breakdown theo CH (lấy CH từ dòng đầu của đơn)
       var chName = String(billRows[0][iCuaHang]).trim();
@@ -515,7 +527,12 @@ function importOnlineFromFabi() {
       }
     });
 
-    var donDaily  = totalDon - soBSN;
+    // Số đơn Trung Thu = đơn có ít nhất 1 mặt hàng TM VÀ KHÔNG có mặt hàng nào khác (BSN/Daily)
+    var soDonTrungThu = 0;
+    for (var hd in donTrungThuHasTM) {
+      if (!donTrungThuHasNonTM[hd]) soDonTrungThu++;
+    }
+    var donDaily  = totalDon - soBSN - soDonTrungThu;
     var gttbDon   = totalDon  > 0 ? Math.round(dtTong / totalDon)  : 0;
     var gttbBSN   = soBSN     > 0 ? Math.round(dtBSN  / soBSN)     : 0;
     var gttbDaily = donDaily  > 0 ? Math.round(dtDaily / donDaily) : 0;
