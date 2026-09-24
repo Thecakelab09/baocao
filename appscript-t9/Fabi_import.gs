@@ -106,6 +106,10 @@ var ROWS_ONLINE = {
   donPBC:       29,
   dtTrungHoa:   33,
   donTrungHoa:  34,
+  // Seasonal / Trung Thu — 3 dòng user vừa thêm sau khối "Online Trung Hòa"
+  dtTrungThu:    38,
+  soDonTrungThu: 39,
+  gttbTrungThu:  40,
 };
 
 // Cột ngày: 1/9 = cột H(8), mỗi ngày 3 cột — dùng chung cho sheet CH và Online
@@ -532,10 +536,11 @@ function importOnlineFromFabi() {
     for (var hd in donTrungThuHasTM) {
       if (!donTrungThuHasNonTM[hd]) soDonTrungThu++;
     }
-    var donDaily  = totalDon - soBSN - soDonTrungThu;
-    var gttbDon   = totalDon  > 0 ? Math.round(dtTong / totalDon)  : 0;
-    var gttbBSN   = soBSN     > 0 ? Math.round(dtBSN  / soBSN)     : 0;
-    var gttbDaily = donDaily  > 0 ? Math.round(dtDaily / donDaily) : 0;
+    var donDaily     = totalDon - soBSN - soDonTrungThu;
+    var gttbDon      = totalDon      > 0 ? Math.round(dtTong    / totalDon)      : 0;
+    var gttbBSN      = soBSN         > 0 ? Math.round(dtBSN     / soBSN)         : 0;
+    var gttbDaily    = donDaily      > 0 ? Math.round(dtDaily   / donDaily)      : 0;
+    var gttbTrungThu = soDonTrungThu > 0 ? Math.round(dtTrungThu / soDonTrungThu) : 0;
 
     function setVal(rowNum, val) { reportSh.getRange(rowNum, col).setValue(val); }
 
@@ -548,6 +553,9 @@ function importOnlineFromFabi() {
     setVal(ROWS_ONLINE.dtDaily,   dtDaily);
     setVal(ROWS_ONLINE.soDonDaily,donDaily);
     setVal(ROWS_ONLINE.gttbDaily, gttbDaily);
+    setVal(ROWS_ONLINE.dtTrungThu,    dtTrungThu);
+    setVal(ROWS_ONLINE.soDonTrungThu, soDonTrungThu);
+    setVal(ROWS_ONLINE.gttbTrungThu,  gttbTrungThu);
 
     setVal(ROWS_ONLINE.dtTueTinh,    perCH.tueTinh.dt);
     setVal(ROWS_ONLINE.donTueTinh,   perCH.tueTinh.don);
@@ -575,6 +583,7 @@ function updateOnlineMonthlyTotal(reportSh) {
     ROWS_ONLINE.dtTimesCity, ROWS_ONLINE.donTimesCity,
     ROWS_ONLINE.dtPBC, ROWS_ONLINE.donPBC,
     ROWS_ONLINE.dtTrungHoa, ROWS_ONLINE.donTrungHoa,
+    ROWS_ONLINE.dtTrungThu, ROWS_ONLINE.soDonTrungThu,
   ];
   sumRows.forEach(function(rowNum) {
     var total = 0;
@@ -591,10 +600,13 @@ function updateOnlineMonthlyTotal(reportSh) {
   var bsnT   = Number(reportSh.getRange(ROWS_ONLINE.soBSN, 2).getValue()) || 0;
   var dtDT   = Number(reportSh.getRange(ROWS_ONLINE.dtDaily, 2).getValue()) || 0;
   var donDT  = Number(reportSh.getRange(ROWS_ONLINE.soDonDaily, 2).getValue()) || 0;
+  var dtTT   = Number(reportSh.getRange(ROWS_ONLINE.dtTrungThu, 2).getValue()) || 0;
+  var donTT  = Number(reportSh.getRange(ROWS_ONLINE.soDonTrungThu, 2).getValue()) || 0;
 
-  reportSh.getRange(ROWS_ONLINE.gttbDon,   2).setValue(donT  > 0 ? Math.round(dtT    / donT)  : 0);
-  reportSh.getRange(ROWS_ONLINE.gttbBSN,   2).setValue(bsnT  > 0 ? Math.round(dtBSNT / bsnT)  : 0);
-  reportSh.getRange(ROWS_ONLINE.gttbDaily, 2).setValue(donDT > 0 ? Math.round(dtDT   / donDT) : 0);
+  reportSh.getRange(ROWS_ONLINE.gttbDon,      2).setValue(donT  > 0 ? Math.round(dtT    / donT)  : 0);
+  reportSh.getRange(ROWS_ONLINE.gttbBSN,      2).setValue(bsnT  > 0 ? Math.round(dtBSNT / bsnT)  : 0);
+  reportSh.getRange(ROWS_ONLINE.gttbDaily,    2).setValue(donDT > 0 ? Math.round(dtDT   / donDT) : 0);
+  reportSh.getRange(ROWS_ONLINE.gttbTrungThu, 2).setValue(donTT > 0 ? Math.round(dtTT   / donTT) : 0);
 }
 
 // ============================================================

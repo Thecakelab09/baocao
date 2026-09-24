@@ -112,14 +112,20 @@ function readOnline(ss, tab) {
       donPBC:            n(28, c),
       dtTrungHoa:        n(32, c),
       donTrungHoa:       n(33, c),
-      leadAds:           n(38, c),
-      donAds:            n(39, c),
-      leadTN:            n(42, c),
-      donTN:             n(43, c),
-      leadTong:          n(46, c),
-      donTong:           n(47, c),
-      tgPH:              n(65, c),
-      donPancake:        n(66, c),
+      // Seasonal (Trung Thu) — dòng 38-40 (1-based) = index 37-39, user vừa
+      // thêm sau khối "Online Trung Hòa"
+      dtTrungThu:        n(37, c),
+      soDonTrungThu:     n(38, c),
+      gttbTrungThu:      n(39, c),
+      // Các dòng bên dưới dịch +4 do vừa chèn 4 dòng Seasonal (37-40)
+      leadAds:           n(42, c),
+      donAds:            n(43, c),
+      leadTN:            n(46, c),
+      donTN:             n(47, c),
+      leadTong:          n(50, c),
+      donTong:           n(51, c),
+      tgPH:              n(69, c),
+      donPancake:        n(70, c),
     });
   }
 
@@ -131,14 +137,19 @@ function readOnline(ss, tab) {
     dtBSN:       { thucTe: n(9,  1), chiTieu: n(9,  2) },
     dtDaily:     { thucTe: n(13, 1), chiTieu: n(13, 2) },
     gttbDonDaily: { thucTe: n(15, 1), chiTieu: n(15, 2) },
-    leadAds:     { thucTe: n(38, 1), chiTieu: n(38, 2) },
-    donAds:      { thucTe: n(39, 1) },
-    leadTN:      { thucTe: n(42, 1), chiTieu: n(42, 2) },
-    donTN:       { thucTe: n(43, 1) },
-    leadTong:    { thucTe: n(46, 1), chiTieu: n(46, 2) },
-    donTong:     { thucTe: n(47, 1) },
-    tgPH:        n(65, 1),
-    donPancake:  n(66, 1),
+    seasonal: {
+      doanhThu: { thucTe: n(37, 1), chiTieu: n(37, 2) },
+      soDon:    { thucTe: n(38, 1), chiTieu: n(38, 2) },
+      gttbDon:  n(39, 1),
+    },
+    leadAds:     { thucTe: n(42, 1), chiTieu: n(42, 2) },
+    donAds:      { thucTe: n(43, 1) },
+    leadTN:      { thucTe: n(46, 1), chiTieu: n(46, 2) },
+    donTN:       { thucTe: n(47, 1) },
+    leadTong:    { thucTe: n(50, 1), chiTieu: n(50, 2) },
+    donTong:     { thucTe: n(51, 1) },
+    tgPH:        n(69, 1),
+    donPancake:  n(70, 1),
     ngayData:    ngayData,
   };
 }
