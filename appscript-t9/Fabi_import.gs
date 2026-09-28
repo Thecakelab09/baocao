@@ -303,8 +303,13 @@ function processChData(rows, reportSh, ch, cols) {
       var dtDailyDon  = tongTienDon - dtBSNDon - thanhTienTM;
       dtTrungThu += thanhTienTM;
 
-      totalDon++;
-      dtTong += tongTienDon;
+      // FIX: Doanh thu/Số đơn tổng KHÔNG cộng Trung Thu nữa — đã có mục
+      // Seasonal riêng ở dưới, tránh cộng lặp vào Doanh thu tổng. Đơn thuần
+      // Trung Thu (không có mặt hàng nào khác) bị loại khỏi Số đơn; đơn hỗn
+      // hợp (có cả TM lẫn BSN/Daily) vẫn tính, chỉ trừ phần doanh thu TM ra.
+      var isPureTM = donTrungThuHasTM[maHD] && !donTrungThuHasNonTM[maHD];
+      if (!isPureTM) totalDon++;
+      dtTong += (tongTienDon - thanhTienTM);
 
       if (hasBSN) {
         soBSN++;
@@ -319,7 +324,9 @@ function processChData(rows, reportSh, ch, cols) {
     for (var hd in donTrungThuHasTM) {
       if (!donTrungThuHasNonTM[hd]) soDonTrungThu++;
     }
-    var donDaily = totalDon - soBSN - soDonTrungThu;
+    // totalDon giờ đã KHÔNG còn đơn Trung Thu thuần (loại ở trên rồi) nên
+    // không trừ soDonTrungThu ở đây nữa — chỉ còn BSN + Daily.
+    var donDaily = totalDon - soBSN;
 
     var gttbDon      = totalDon     > 0 ? Math.round(dtTong    / totalDon)     : 0;
     var gttbBSN      = soBSN        > 0 ? Math.round(dtBSN     / soBSN)        : 0;
@@ -516,17 +523,21 @@ function importOnlineFromFabi() {
         }
       });
 
-      totalDon++;
-      dtTong += tongTT;
+      // FIX: Doanh thu/Số đơn tổng KHÔNG cộng Trung Thu nữa — đã có mục
+      // Seasonal riêng ở dưới. Đơn thuần Trung Thu (không có mặt hàng nào
+      // khác) bị loại khỏi Số đơn; đơn hỗn hợp vẫn tính, chỉ trừ phần TM.
+      var isPureTM = donTrungThuHasTM[maHD] && !donTrungThuHasNonTM[maHD];
+      if (!isPureTM) totalDon++;
+      dtTong += (tongTT - tmTT);
       if (hasBSN) { soBSN++; dtBSN += bsnTT; }
       dtTrungThu += tmTT;
       dtDaily += (tongTT - bsnTT - tmTT);
 
-      // Breakdown theo CH (lấy CH từ dòng đầu của đơn)
+      // Breakdown theo CH (lấy CH từ dòng đầu của đơn) — cùng loại trừ Trung Thu
       var chName = String(billRows[0][iCuaHang]).trim();
       var chKey = CH_NAME_KEY[chName];
-      if (chKey) {
-        perCH[chKey].dt  += tongTT;
+      if (chKey && !isPureTM) {
+        perCH[chKey].dt  += (tongTT - tmTT);
         perCH[chKey].don += 1;
       }
     });
@@ -536,7 +547,8 @@ function importOnlineFromFabi() {
     for (var hd in donTrungThuHasTM) {
       if (!donTrungThuHasNonTM[hd]) soDonTrungThu++;
     }
-    var donDaily     = totalDon - soBSN - soDonTrungThu;
+    // totalDon giờ đã KHÔNG còn đơn Trung Thu thuần nên không trừ soDonTrungThu nữa
+    var donDaily     = totalDon - soBSN;
     var gttbDon      = totalDon      > 0 ? Math.round(dtTong    / totalDon)      : 0;
     var gttbBSN      = soBSN         > 0 ? Math.round(dtBSN     / soBSN)         : 0;
     var gttbDaily    = donDaily      > 0 ? Math.round(dtDaily   / donDaily)      : 0;

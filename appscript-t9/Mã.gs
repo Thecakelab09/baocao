@@ -771,8 +771,10 @@ function readFabiKPI(ss, fabiRows) {
     }
     var d = acc[chKey][day][nguonKey];
 
-    d.dtTong += thanhTien;
-    d.donSet[maHD] = true;
+    // FIX: Doanh thu/Số đơn tổng KHÔNG cộng Trung Thu (TM) — Trung Thu đã có
+    // mục Seasonal riêng, tránh cộng lặp vào Doanh thu tổng.
+    if (!isTM) d.dtTong += thanhTien;
+    if (!isTM) d.donSet[maHD] = true;
 
     if (bsn) {
       d.dtBSN += thanhTien;
@@ -805,6 +807,9 @@ function readFabiKPI(ss, fabiRows) {
           };
           return;
         }
+        // soDon (donSet) giờ đã KHÔNG còn chứa đơn Trung Thu thuần (isTM
+        // không thêm vào donSet nữa) nên không cần trừ soDonTrungThu ở đây
+        // nữa — chỉ còn BSN + Daily.
         var soDon = countKeys(d.donSet);
         var soDonBSN = countKeys(d.donBSNSet);
         // Đếm đơn Trung Thu: chỉ đơn có toàn bộ mặt hàng là TM (không có mặt hàng nào khác)
@@ -812,7 +817,7 @@ function readFabiKPI(ss, fabiRows) {
         for (var hd in d.donTrungThuHasTM) {
           if (!d.donTrungThuHasNonTM[hd]) soDonTrungThu++;
         }
-        var soDonDaily = Math.max(0, soDon - soDonBSN - soDonTrungThu);
+        var soDonDaily = Math.max(0, soDon - soDonBSN);
         result[ch][day][nguonKey] = {
           doanhThu:      Math.round(d.dtTong),
           soDon:         soDon,
