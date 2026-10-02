@@ -1,4 +1,4 @@
-// THE CAKE LAB - Apps Script Dashboard T9/2026 (FIXED)
+// THE CAKE LAB - Apps Script Dashboard T10/2026 (copy từ bản T9, đã cập nhật)
 // File đầy đủ: doGet + tất cả các hàm đọc dữ liệu (CH, Online, Ads, Marketing, Fabi)
 //
 // FIX so với bản gốc: sửa lỗi so khớp nhóm "Đồ ăn đồ uống TM" trong
@@ -14,7 +14,7 @@ function warmCache() {
 
 // Chạy thủ công khi cần xóa cache ngay lập tức
 function clearCache() {
-  CacheService.getScriptCache().remove('dashboard_t9');
+  CacheService.getScriptCache().remove('dashboard_t10');
   warmCache();
 }
 
@@ -30,7 +30,7 @@ function doGet(e) {
     var bust = e && e.parameter && e.parameter.bust;
 
     var cache = CacheService.getScriptCache();
-    var cacheKey = 'dashboard_t9';
+    var cacheKey = 'dashboard_t10';
     if (!bust) {
       var cached = cache.get(cacheKey);
       if (cached) {
@@ -48,13 +48,12 @@ function doGet(e) {
     // readFabiKHOnlineClassification — tránh mở chéo 3 sheet đó 2 lần.
     var khHistorySeed = loadKHHistorySeed_(ss, fabiRows);
     var result = {
-      tueTinh:   readCH(ss, 'Tuệ Tĩnh T9'),
-      timesCity: readCH(ss, 'Timescity T9'),
-      pbc:       readCH(ss, 'PBC T9'),
-      trungHoa:  readCH(ss, 'Trung Hòa T9'),
-      online:    readOnline(ss, 'Online T9'),
-      marketing: readMarketing(ss, 'Marketing T9'),
-      ads:       readAds(ss, 'Ads T9'),
+      tueTinh:   readCH(ss, 'Tuệ Tĩnh T10'),
+      timesCity: readCH(ss, 'Timescity T10'),
+      trungHoa:  readCH(ss, 'Trung Hòa T10'),
+      online:    readOnline(ss, 'Online T10'),
+      marketing: readMarketing(ss, 'Marketing T10'),
+      ads:       readAds(ss, 'Ads T10'),
       fabiTop:        readFabiTopProducts(ss, fabiRows),
       fabiTopOnline:  readFabiTopOnlineProducts(ss, fabiRows),
       fabiKPI:   readFabiKPI(ss, fabiRows),
@@ -156,7 +155,7 @@ function readOnline(ss, tab) {
 
 // =============================================================
 // SHEET ADS
-// Đọc từ "Báo cáo ADS the cakelab" sheet riêng, fallback về tab "Ads T9"
+// Đọc từ "Báo cáo ADS the cakelab" sheet riêng, fallback về tab "Ads T10"
 // =============================================================
 var BAO_CAO_ADS_ID  = '12iXIAtEFdcrECLvZlZcRbxxjrR1QKg7J6eXhMAe9NCo';
 var BAO_CAO_ADS_TAB = 'Tháng 9';
@@ -170,7 +169,7 @@ function readAds(ss, tab) {
     if (adsSS) sh = adsSS.getSheetByName(BAO_CAO_ADS_TAB);
   } catch(e) { sh = null; }
 
-  // Fallback: tab "Ads T9" trong Dashboard T9
+  // Fallback: tab "Ads T10" trong Dashboard T10
   if (!sh) {
     var fallbackSS = ss || SpreadsheetApp.getActiveSpreadsheet();
     sh = fallbackSS.getSheetByName(tab);
@@ -468,7 +467,7 @@ function readFabiTopProducts(ss, fabiRows) {
     return null;
   }
 
-  var TARGET_MONTH = 9;
+  var TARGET_MONTH = 10;
   var TARGET_YEAR  = 2026;
   var startRow = 2;
 
@@ -543,7 +542,7 @@ function readFabiTopOnlineProducts(ss, fabiRows) {
 
   var COL_CH = 0, COL_TEN = 3, COL_NHOM = 4, COL_NGUON = 8, COL_NGAY = 13, COL_SL = 15;
   var CH_MAP = { 'CS1':'tueTinh','CS2':'timesCity','CS3':'pbc','CS4':'trungHoa' };
-  var TARGET_MONTH = 9, TARGET_YEAR = 2026;
+  var TARGET_MONTH = 10, TARGET_YEAR = 2026;
 
   function normStr(s) {
     return String(s||'').trim().toUpperCase()
@@ -650,7 +649,7 @@ function readFabiKPI(ss, fabiRows) {
   var COL_SL    = 15;
   var COL_TT    = 39; // AN: Doanh thu đã net
 
-  var TARGET_MONTH = 9;
+  var TARGET_MONTH = 10;
   var TARGET_YEAR  = 2026;
   var startRow = 2;
 
@@ -847,16 +846,16 @@ function readFabiKPI(ss, fabiRows) {
 // ⚠️ Khi đổi ACTIVE_MONTH sang tháng mới: bỏ tháng cũ nhất trong danh sách
 // dưới, thêm ID sheet của tháng vừa kết thúc vào cuối.
 var PREV_MONTHS_SHEETS = [
-  { id: '1XNQuwfKnXzOjs1PN7FkVS3LpNhHwLLwQ7UWaowJWq8A', month: 6, year: 2026 }, // T6/2026
   { id: '1FC-n5zjfAiS2Jz50bR5AArEJwkDnPt-HnMczjZmcisc', month: 7, year: 2026 }, // T7/2026
   { id: '14C9Wy9kcsqmUpCtFNEJ0xW5THlJqr7ZnikUGROFLRWs', month: 8, year: 2026 }, // T8/2026
+  { id: '1RJ_rFxAvtVnfG_39sbMyv-Rqtf7P4A6tPK_g1cGBAbQ', month: 9, year: 2026 }, // T9/2026
 ];
 
 // Định nghĩa "KH cũ quay lại ≤90 ngày" theo đúng nghiệp vụ (không phải đếm
 // đúng 90 ngày lịch): khách có hoá đơn trong 1 trong 3 tháng liền trước
 // (T6/T7/T8) = ≤90 ngày · khách chỉ có hoá đơn từ tháng 5 trở về trước
 // (không xuất hiện ở T6-T8) = >90 ngày. Mốc cắt = ngày 1 của tháng sớm
-// nhất trong PREV_MONTHS_SHEETS (hiện là 1/6/2026) — tự tính min, không
+// nhất trong PREV_MONTHS_SHEETS (hiện là 1/7/2026) — tự tính min, không
 // phụ thuộc thứ tự phần tử trong mảng.
 var KH_RECENT_CUTOFF_ABSDAY = (function() {
   var minAbsDay = Infinity;
@@ -1060,7 +1059,7 @@ function readFabiKHClassification(ss, fabiRows, historySeedIn) {
   var COL_NGAY  = 13;
   var COL_SDT   = 37;
 
-  var TARGET_MONTH = 9;
+  var TARGET_MONTH = 10;
   var TARGET_YEAR  = 2026;
   var startRow = 2;
 
@@ -1221,7 +1220,7 @@ function readFabiKHOnlineClassification(ss, fabiRows, historySeedIn) {
   var COL_NGAY  = 13;
   var COL_SDT   = 37;
 
-  var TARGET_MONTH = 9;
+  var TARGET_MONTH = 10;
   var TARGET_YEAR  = 2026;
 
   function toAbsDay(y, m, d) { return Math.floor(Date.UTC(y, m-1, d) / 86400000); }
@@ -1338,7 +1337,7 @@ function readFabiItemsDistribution(ss, fabiRows) {
   var COL_MAHD  = 11;
   var COL_NGAY  = 13;
 
-  var TARGET_MONTH = 9;
+  var TARGET_MONTH = 10;
   var TARGET_YEAR  = 2026;
   var startRow = 2;
 
