@@ -889,7 +889,7 @@ function debugOnlineDay(day) {
 // Đếm theo SỐ ĐƠN (Mã hoá đơn duy nhất), không tính trùng dòng sản phẩm
 // ============================================================
 
-var ROW_FOODAPP = 67; // dòng ghi "Số đơn Food App" trong sheet Online T10
+var ROW_FOODAPP = 71; // dòng ghi "Số đơn Food App" trong sheet Online T10 (dịch +4 do thêm 4 dòng Seasonal)
 
 var FOODAPP_SOURCES = ['GRABFOOD', 'SHOPEEFOOD', 'BEFOOD', 'XANHSM'];
 
