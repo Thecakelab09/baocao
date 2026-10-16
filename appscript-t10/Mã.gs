@@ -751,10 +751,16 @@ function readFabiKPI(ss, fabiRows) {
     var thanhTien = parseMoney(row[COL_TT]);
     var soLuong = parseMoney(row[COL_SL]);
     var nhomRaw = String(row[COL_NHOM] || '');
-    var bsn = isBSN(nhomRaw);
-    // FIX: normStr() giờ đã bỏ dấu phẩy nên "ĐỒ ĂN, ĐỒ UỐNG TM" khớp đúng "DO AN DO UONG TM"
-    var isTM = normStr(nhomRaw).indexOf('DO AN DO UONG TM') !== -1;
     var loaiMon = COL_LOAI >= 0 ? normStr(String(row[COL_LOAI] || '')) : '';
+    // FIX (từ T10): Seasonal giờ tổng quát hoá cho MỌI dịp lễ (8/3, 20/10,
+    // 20/11, Tết, Trung Thu...), không chỉ riêng Trung Thu — nhận diện qua
+    // cột "Loại món" chứa "Mùa vụ" (vd "BSN Bloom/Petal" dịp 20/10 cũng tính
+    // vào Seasonal dù tên có chữ BSN). Giữ thêm điều kiện Nhóm món TM cũ
+    // (Trung Thu) làm lưới an toàn, phòng mặt hàng chưa gắn tag Mùa vụ.
+    var isSeasonal = loaiMon.indexOf('MUA VU') !== -1
+      || normStr(nhomRaw).indexOf('DO AN DO UONG TM') !== -1; // Trung Thu (rule cũ)
+    var bsn = !isSeasonal && isBSN(nhomRaw);
+    var isTM = isSeasonal; // giữ tên biến cũ cho phần code bên dưới
     var isDecor = bsn && loaiMon.indexOf('BO TRANG TRI') !== -1;
 
     if (!acc[chKey][day]) acc[chKey][day] = {};

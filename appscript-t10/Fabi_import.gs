@@ -23,6 +23,18 @@ var MA_PHI_SHIP = '20102003';
 // trong Fabi_TatCaCuaHang (có dấu phẩy: "ĐỒ ĂN, ĐỒ UỐNG TM")
 var NHOM_TRUNG_THU = 'ĐỒ ĂN, ĐỒ UỐNG TM';
 
+// FIX T10: Seasonal giờ tổng quát hoá cho MỌI dịp lễ (8/3, 20/10, 20/11,
+// Tết, Trung Thu...), không chỉ riêng Trung Thu — nhận diện qua cột
+// "Loại món" có chứa chữ này (vd "BSN Bloom/Petal" dịp 20/10 vẫn tính vào
+// Seasonal dù tên có chữ BSN, ưu tiên cao hơn nhóm BSN thường).
+var LOAI_SEASONAL = 'mùa vụ'; // so khớp không phân biệt hoa/thường (xem isSeasonalLoai_)
+
+// So khớp "Loại món" có chứa "mùa vụ", không phân biệt hoa/thường — Fabi
+// ghi không nhất quán (vd "BSN mùa vụ", "Bánh quy Mùa Vụ"...).
+function isSeasonalLoai_(loai) {
+  return String(loai || '').toLowerCase().indexOf(LOAI_SEASONAL) !== -1;
+}
+
 // Parse tiền từ string (có thể có dấu chấm/phẩy ngàn)
 function parseMoney(val) {
   if (!val && val !== 0) return 0;
@@ -183,6 +195,7 @@ function importAllCH() {
     iNguon:     colMap['Nguồn'],
     iThoiGian:  colMap['Thời gian'],
     iNhomMon:   colMap['Nhóm món'],
+    iLoaiMon:   colMap['Loại món'], // FIX T10: nhận diện Seasonal (chứa "Mùa vụ")
     iTenHang:   colMap['Tên hàng'],
     iSoLuong:   colMap['Số lượng'],
     iTongTien:  colMap['Tổng tiền'],
@@ -272,29 +285,29 @@ function processChData(rows, reportSh, ch, cols) {
     Object.keys(bills).forEach(function(maHD) {
       var billRows = bills[maHD];
 
-      var hasBSN = billRows.some(function(r) {
-        return String(r[cols.iNhomMon]).trim() === 'BÁNH KEM SINH NHẬT';
-      });
-
       // DT = tổng Tổng tiền (cột cuối Fabi, đã bao gồm mọi giảm giá/chiết khấu,
       // KHÔNG bao gồm phí ship — đã lọc bỏ ở allRows)
       var tongThanhTien = 0;
       var thanhTienBSN  = 0;
       var thanhTienTM   = 0;
+      var hasBSN = false;
       billRows.forEach(function(r) {
         var tt    = parseMoney(r[cols.iTongTien]);
         var nhom  = String(r[cols.iNhomMon]).trim();
-        // FIX: nhóm Trung Thu ghi CÓ dấu phẩy trong data thật ("ĐỒ ĂN, ĐỒ UỐNG TM")
-        var isTM  = nhom === NHOM_TRUNG_THU;
+        var loai  = cols.iLoaiMon !== undefined ? String(r[cols.iLoaiMon] || '') : '';
+        // FIX T10: Seasonal = Loại món chứa "Mùa vụ" (mọi dịp lễ), HOẶC
+        // Nhóm món Trung Thu cũ (lưới an toàn) — ưu tiên cao hơn BSN.
+        var isTM  = isSeasonalLoai_(loai) || nhom === NHOM_TRUNG_THU;
         tongThanhTien += tt;
-        if (nhom === 'BÁNH KEM SINH NHẬT') {
-          thanhTienBSN += tt;
-        }
         if (isTM) {
           thanhTienTM += tt;
           donTrungThuHasTM[maHD] = true;
         } else {
           donTrungThuHasNonTM[maHD] = true;
+          if (nhom === 'BÁNH KEM SINH NHẬT') {
+            thanhTienBSN += tt;
+            hasBSN = true;
+          }
         }
       });
       var tongTienDon = tongThanhTien;
@@ -438,6 +451,7 @@ function importOnlineFromFabi() {
   var iNguon     = colMap['Nguồn'];
   var iThoiGian  = colMap['Thời gian'];
   var iNhomMon   = colMap['Nhóm món'];
+  var iLoaiMon   = colMap['Loại món']; // FIX T10: nhận diện Seasonal (chứa "Mùa vụ")
   var iThanhTien = colMap['Thành tiền'];
   var iTongTien  = colMap['Tổng tiền'];
   var iGiamGia   = colMap['Giảm giá'];
@@ -501,24 +515,24 @@ function importOnlineFromFabi() {
 
     Object.keys(bills).forEach(function(maHD) {
       var billRows = bills[maHD];
-      var hasBSN = billRows.some(function(r) {
-        return String(r[iNhomMon]).trim() === 'BÁNH KEM SINH NHẬT';
-      });
 
       // FIX: trừ cả BSN lẫn Trung Thu (TM) khỏi Daily — trước đây chỉ trừ
       // BSN nên doanh thu bánh Trung Thu bị tính lẫn vào Daily.
-      var tongTT = 0, bsnTT = 0, tmTT = 0;
+      // FIX T10: Seasonal = Loại món chứa "Mùa vụ" (mọi dịp lễ), HOẶC Nhóm
+      // món Trung Thu cũ (lưới an toàn) — ưu tiên cao hơn BSN.
+      var tongTT = 0, bsnTT = 0, tmTT = 0, hasBSN = false;
       billRows.forEach(function(r) {
         var tt = parseMoney(r[iTongTien]);
         var nhom = String(r[iNhomMon]).trim();
+        var loai = iLoaiMon !== undefined ? String(r[iLoaiMon] || '') : '';
         tongTT += tt;
-        if (nhom === 'BÁNH KEM SINH NHẬT') bsnTT += tt;
-        var isTM = nhom === NHOM_TRUNG_THU;
+        var isTM = isSeasonalLoai_(loai) || nhom === NHOM_TRUNG_THU;
         if (isTM) {
           tmTT += tt;
           donTrungThuHasTM[maHD] = true;
         } else {
           donTrungThuHasNonTM[maHD] = true;
+          if (nhom === 'BÁNH KEM SINH NHẬT') { bsnTT += tt; hasBSN = true; }
         }
       });
 
