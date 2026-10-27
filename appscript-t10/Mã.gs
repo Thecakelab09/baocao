@@ -158,7 +158,7 @@ function readOnline(ss, tab) {
 // Đọc từ "Báo cáo ADS the cakelab" sheet riêng, fallback về tab "Ads T10"
 // =============================================================
 var BAO_CAO_ADS_ID  = '12iXIAtEFdcrECLvZlZcRbxxjrR1QKg7J6eXhMAe9NCo';
-var BAO_CAO_ADS_TAB = 'Tháng 9';
+var BAO_CAO_ADS_TAB = 'Tháng 10';
 
 function adsCol(day) { return 2 + day; }
 

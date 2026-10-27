@@ -1,0 +1,1514 @@
+// THE CAKE LAB - Apps Script Dashboard T11/2026 (copy từ bản T10, đã cập nhật)
+// File đầy đủ: doGet + tất cả các hàm đọc dữ liệu (CH, Online, Ads, Marketing, Fabi)
+//
+// FIX so với bản gốc: sửa lỗi so khớp nhóm "Đồ ăn đồ uống TM" trong
+// readFabiKPI() — dữ liệu Fabi thực tế ghi CÓ dấu phẩy
+// ("ĐỒ ĂN, ĐỒ UỐNG TM"), bản cũ normStr() không strip dấu phẩy nên
+// chuỗi tìm "DO AN DO UONG TM" (không phẩy) không bao giờ khớp với
+// "DO AN, DO UONG TM" (có phẩy) → Trung Thu luôn ra 0 trên dashboard live.
+
+// Chạy mỗi 4 phút qua trigger để giữ cache luôn nóng
+function warmCache() {
+  doGet({ parameter: {} });
+}
+
+// Chạy thủ công khi cần xóa cache ngay lập tức
+function clearCache() {
+  CacheService.getScriptCache().remove('dashboard_t11');
+  warmCache();
+}
+
+// Chạy 1 lần để cấp quyền truy cập "Báo cáo ADS" sheet
+function authorizeAdsSheet() {
+  var ss = SpreadsheetApp.openById(BAO_CAO_ADS_ID);
+  var sh = ss ? ss.getSheetByName(BAO_CAO_ADS_TAB) : null;
+  Logger.log(sh ? 'OK: ' + sh.getLastRow() + ' rows' : 'Sheet not found');
+}
+
+function doGet(e) {
+  try {
+    var bust = e && e.parameter && e.parameter.bust;
+
+    var cache = CacheService.getScriptCache();
+    var cacheKey = 'dashboard_t11';
+    if (!bust) {
+      var cached = cache.get(cacheKey);
+      if (cached) {
+        return ContentService.createTextOutput(cached)
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    // Đọc Fabi_TatCaCuaHang 1 lần duy nhất, chia sẻ cho 4 hàm Fabi để tránh đọc 4 lần
+    var fabiSh = ss.getSheetByName('Fabi_TatCaCuaHang');
+    var fabiRows = fabiSh ? fabiSh.getDataRange().getDisplayValues() : null;
+    // Tính lịch sử "ngày mua gần nhất" (mở chéo 3 sheet tháng trước) 1 lần
+    // duy nhất, chia sẻ cho cả readFabiKHClassification lẫn
+    // readFabiKHOnlineClassification — tránh mở chéo 3 sheet đó 2 lần.
+    var khHistorySeed = loadKHHistorySeed_(ss, fabiRows);
+    var result = {
+      tueTinh:   readCH(ss, 'Tuệ Tĩnh T11'),
+      timesCity: readCH(ss, 'Timescity T11'),
+      trungHoa:  readCH(ss, 'Trung Hòa T11'),
+      online:    readOnline(ss, 'Online T11'),
+      marketing: readMarketing(ss, 'Marketing T11'),
+      ads:       readAds(ss, 'Ads T11'),
+      fabiTop:        readFabiTopProducts(ss, fabiRows),
+      fabiTopOnline:  readFabiTopOnlineProducts(ss, fabiRows),
+      fabiKPI:   readFabiKPI(ss, fabiRows),
+      fabiKH:       readFabiKHClassification(ss, fabiRows, khHistorySeed),
+      fabiKHOnline: readFabiKHOnlineClassification(ss, fabiRows, khHistorySeed),
+      fabiItems: readFabiItemsDistribution(ss, fabiRows),
+    };
+    var json = JSON.stringify(result);
+
+    try { cache.put(cacheKey, json, 600); } catch(e) {}
+
+    var cb = e && e.parameter && e.parameter.callback;
+    if (cb) {
+      return ContentService.createTextOutput(cb + '(' + json + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(json)
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({error: err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// =============================================================
+// SHEET ONLINE
+// =============================================================
+function onlineCol(day) { return 7 + (day - 1) * 3; }
+
+function readOnline(ss, tab) {
+  var sh = ss.getSheetByName(tab);
+  if (!sh) return { error: 'Tab not found: ' + tab };
+  var v = sh.getDataRange().getValues();
+  var n = function(r, c) { return Number(v[r] && v[r][c]) || 0; };
+
+  var ngayData = [];
+  for (var d = 1; d <= 31; d++) {
+    var c = onlineCol(d);
+    ngayData.push({
+      ngay:              d,
+      doanhThu:          n(5,  c),
+      doanhThuChiTieu:   n(5,  c+1),
+      soDon:             n(6,  c),
+      gttbDon:           n(7,  c),
+      soBSN:             n(10, c),
+      dtBSN:             n(9,  c),
+      dtDaily:           n(13, c),
+      soDonDaily:        n(14, c),
+      gttbDailyChiTieu:  n(15, c+1),
+      dtTueTinh:         n(17, c),
+      donTueTinh:        n(18, c),
+      dtTimesCity:       n(22, c),
+      donTimesCity:      n(23, c),
+      dtPBC:             n(27, c),
+      donPBC:            n(28, c),
+      dtTrungHoa:        n(32, c),
+      donTrungHoa:       n(33, c),
+      // Seasonal (Trung Thu) — dòng 38-40 (1-based) = index 37-39, user vừa
+      // thêm sau khối "Online Trung Hòa"
+      dtTrungThu:        n(37, c),
+      soDonTrungThu:     n(38, c),
+      gttbTrungThu:      n(39, c),
+      // Các dòng bên dưới dịch +4 do vừa chèn 4 dòng Seasonal (37-40)
+      leadAds:           n(42, c),
+      donAds:            n(43, c),
+      leadTN:            n(46, c),
+      donTN:             n(47, c),
+      leadTong:          n(50, c),
+      donTong:           n(51, c),
+      tgPH:              n(69, c),
+      donPancake:        n(70, c),
+    });
+  }
+
+  return {
+    doanhThu:    { thucTe: n(5,  1), chiTieu: n(5,  2) },
+    soDon:       { thucTe: n(6,  1), chiTieu: n(6,  2) },
+    gttbDon:     n(7, 1),
+    soBSN:       { thucTe: n(10, 1), chiTieu: n(10, 2) },
+    dtBSN:       { thucTe: n(9,  1), chiTieu: n(9,  2) },
+    dtDaily:     { thucTe: n(13, 1), chiTieu: n(13, 2) },
+    gttbDonDaily: { thucTe: n(15, 1), chiTieu: n(15, 2) },
+    seasonal: {
+      doanhThu: { thucTe: n(37, 1), chiTieu: n(37, 2) },
+      soDon:    { thucTe: n(38, 1), chiTieu: n(38, 2) },
+      gttbDon:  n(39, 1),
+    },
+    leadAds:     { thucTe: n(42, 1), chiTieu: n(42, 2) },
+    donAds:      { thucTe: n(43, 1) },
+    leadTN:      { thucTe: n(46, 1), chiTieu: n(46, 2) },
+    donTN:       { thucTe: n(47, 1) },
+    leadTong:    { thucTe: n(50, 1), chiTieu: n(50, 2) },
+    donTong:     { thucTe: n(51, 1) },
+    tgPH:        n(69, 1),
+    donPancake:  n(70, 1),
+    ngayData:    ngayData,
+  };
+}
+
+// =============================================================
+// SHEET ADS
+// Đọc từ "Báo cáo ADS the cakelab" sheet riêng, fallback về tab "Ads T11"
+// =============================================================
+var BAO_CAO_ADS_ID  = '12iXIAtEFdcrECLvZlZcRbxxjrR1QKg7J6eXhMAe9NCo';
+var BAO_CAO_ADS_TAB = 'Tháng 11';
+
+function adsCol(day) { return 2 + day; }
+
+function readAds(ss, tab) {
+  var sh;
+  try {
+    var adsSS = SpreadsheetApp.openById(BAO_CAO_ADS_ID);
+    if (adsSS) sh = adsSS.getSheetByName(BAO_CAO_ADS_TAB);
+  } catch(e) { sh = null; }
+
+  // Fallback: tab "Ads T11" trong Dashboard T11
+  if (!sh) {
+    var fallbackSS = ss || SpreadsheetApp.getActiveSpreadsheet();
+    sh = fallbackSS.getSheetByName(tab);
+  }
+  if (!sh) return { error: 'Ads sheet not found' };
+
+  var v = sh.getDataRange().getValues();
+  var n = function(r, c) { return Number(v[r] && v[r][c]) || 0; };
+  var maxCol = v[0] ? v[0].length : 0;
+
+  var ngayData = [];
+  for (var d = 1; d <= 31; d++) {
+    var c = adsCol(d);
+    if (c >= maxCol) break;
+    ngayData.push({
+      ngay:    d,
+      chiPhi:  n(2, c),
+      mess:    n(3, c),
+      comment: n(4, c),
+      soDon:   n(6, c),
+      roas:    n(8, c),
+    });
+  }
+
+  return {
+    chiPhi:   n(2, 2),
+    mess:     n(3, 2),
+    comment:  n(4, 2),
+    soDon:    n(6, 2),
+    roas:     n(8, 2),
+    ngayData: ngayData,
+  };
+}
+
+// =============================================================
+// SHEET CUA HANG (Tue Tinh, Timescity, PBC, Trung Hoa)
+// =============================================================
+function chCol(day) { return 7 + (day - 1) * 3; }
+
+function readCH(ss, tab) {
+  var sh = ss.getSheetByName(tab);
+  if (!sh) return { error: 'Tab not found: ' + tab };
+  var v = sh.getDataRange().getValues();
+  var n = function(r, c) { return Number(v[r] && v[r][c]) || 0; };
+
+  var ngayData = [];
+  for (var d = 1; d <= 31; d++) {
+    var c = chCol(d);
+    ngayData.push({
+      ngay:       d,
+      doanhThu:   n(5,  c),
+      chiTieu:    n(5,  c+1),
+      soDon:      n(6,  c),
+      gttbDon:    n(7,  c),
+      dtBSN:         n(9,  c),
+      soBSN:         n(10, c),
+      gttbBSN:       n(11, c),
+      dtDaily:       n(13, c),
+      soDonDaily:    n(14, c),
+      gttbDaily:     n(15, c),
+      // Seasonal (Trung Thu) — dòng 18-20 (1-based) = index 17-19
+      dtTrungThu:    n(17, c),
+      soDonTrungThu: n(18, c),
+      gttbTrungThu:  n(19, c),
+      luotKhachVao:  n(37, c), // dịch +4 do thêm 4 dòng Seasonal
+      topBanChay:    readTopNhomByDay(v, 21, d), // dịch 17→21
+      topHuy:        readTopHuyByDay(v, 39, d),  // dịch 35→39
+    });
+  }
+
+  return {
+    doanhThu: { thucTe: n(5,  1), chiTieu: n(5,  2) },
+    soDon:    { thucTe: n(6,  1), chiTieu: n(6,  2) },
+    gttbDon:  n(7, 1),
+    dtBSN:    { thucTe: n(9,  1), chiTieu: n(9,  2) },
+    soBSN:    { thucTe: n(10, 1), chiTieu: n(10, 2) },
+    gttbBSN:  n(11, 1),
+    daily: {
+      doanhThu: { thucTe: n(13, 1), chiTieu: n(13, 2) },
+      soDon:    { thucTe: n(14, 1), chiTieu: n(14, 2) },
+      gttbDon:  n(15, 1),
+    },
+    seasonal: {
+      doanhThu: { thucTe: n(17, 1), chiTieu: n(17, 2) },
+      soDon:    { thucTe: n(18, 1), chiTieu: n(18, 2) },
+      gttbDon:  n(19, 1),
+    },
+    tuan: {
+      doanhThu: { thucTe: n(5,  4), chiTieu: n(5,  5) },
+      soDon:    { thucTe: n(6,  4), chiTieu: n(6,  5) },
+      soBSN:    { thucTe: n(10, 4), chiTieu: n(10, 5) },
+    },
+    topBanChay:   readTopNhom(v, 21),    // dịch 17→21
+    topHuy:       readTopHuy(v, 39),     // dịch 35→39
+    luotKhachVao: { thucTe: n(37, 1), chiTieu: n(37, 2) },  // dịch 33→37
+    ngayData:   ngayData,
+  };
+}
+
+function normalizeStr(s) {
+  return String(s||'').trim().toUpperCase()
+    .replace(/[àáảãạăắằẳẵặâấầẩẫậ]/gi,'A')
+    .replace(/[èéẻẽẹêếềểễệ]/gi,'E')
+    .replace(/[ìíỉĩị]/gi,'I')
+    .replace(/[òóỏõọôốồổỗộơớờởỡợ]/gi,'O')
+    .replace(/[ùúủũụưứừửữự]/gi,'U')
+    .replace(/[đ]/gi,'D')
+    .replace(/[ýỳỷỹỵ]/gi,'Y');
+}
+
+function readTopNhomByDay(v, startRow, day) {
+  var KEY_MAP = {
+    'BSN': 'bsn', 'BANH KEM NHO': 'banhKemNho',
+    'BANH MI': 'banhMi', 'BANH KHAC': 'banhKhac'
+  };
+  var result = { bsn: [], banhKemNho: [], banhMi: [], banhKhac: [] };
+  var currentKey = null;
+  var maxRow = Math.min(startRow + 16, v.length);
+  var tenCol = 7 + (day-1)*3;
+  var slCol  = 9 + (day-1)*3;
+  for (var r = startRow; r < maxRow; r++) {
+    var cellA = normalizeStr(v[r] && v[r][0]);
+    var matched = null;
+    for (var lbl in KEY_MAP) {
+      if (cellA.indexOf(lbl) !== -1) { matched = lbl; break; }
+    }
+    if (matched) { currentKey = KEY_MAP[matched]; continue; }
+    if (cellA.indexOf('TOP') !== -1 || cellA.indexOf('HUY') !== -1 || cellA === 'TEN SAN PHAM') continue;
+    if (currentKey && result[currentKey] !== undefined) {
+      var ten = String(v[r][tenCol] || '').trim();
+      var sl  = Number(v[r][slCol]) || 0;
+      if (ten && ten !== 'Ten san pham' && ten !== 'Tên sản phẩm') {
+        result[currentKey].push({ ten: ten, soLuong: sl });
+      }
+    }
+  }
+  return result;
+}
+
+function readTopNhom(v, startRow) {
+  var KEY_MAP = {
+    'BSN': 'bsn', 'BANH KEM NHO': 'banhKemNho',
+    'BANH MI': 'banhMi', 'BANH KHAC': 'banhKhac'
+  };
+  var result = { bsn: [], banhKemNho: [], banhMi: [], banhKhac: [] };
+  var currentKey = null;
+  var maxRow = Math.min(startRow + 16, v.length);
+  for (var r = startRow; r < maxRow; r++) {
+    var cellA = normalizeStr(v[r] && v[r][0]);
+    var matched = null;
+    for (var lbl in KEY_MAP) {
+      if (cellA.indexOf(lbl) !== -1) { matched = lbl; break; }
+    }
+    if (matched) { currentKey = KEY_MAP[matched]; continue; }
+    if (cellA.indexOf('TOP') !== -1 || cellA.indexOf('HUY') !== -1 || cellA === 'TEN SAN PHAM') continue;
+    if (currentKey && result[currentKey] !== undefined) {
+      var map = {};
+      for (var col = 7; col < Math.min(v[r].length, 100); col += 3) {
+        var t = String(v[r][col] || '').trim();
+        var sl = Number(v[r][col+2]) || 0;
+        if (t && t !== 'Ten san pham' && t !== 'Tên sản phẩm' && t !== '') {
+          map[t] = (map[t] || 0) + sl;
+        }
+      }
+      for (var name in map) {
+        var found = false;
+        for (var k = 0; k < result[currentKey].length; k++) {
+          if (result[currentKey][k].ten === name) {
+            result[currentKey][k].soLuong += map[name];
+            found = true; break;
+          }
+        }
+        if (!found) result[currentKey].push({ ten: name, soLuong: map[name] });
+      }
+    }
+  }
+  for (var key in result) {
+    result[key].sort(function(a,b){ return b.soLuong - a.soLuong; });
+  }
+  return result;
+}
+
+function readTopHuyByDay(v, startRow, day) {
+  var result = [];
+  var maxRow = Math.min(startRow + 10, v.length);
+  var tenCol = 7 + (day-1)*3;
+  var slCol  = 9 + (day-1)*3;
+  for (var r = startRow; r < maxRow; r++) {
+    var ten = String(v[r][tenCol] || '').trim();
+    var sl  = Number(v[r][slCol]) || 0;
+    if (ten && ten !== 'Ten san pham' && ten !== 'Tên sản phẩm') {
+      result.push({ ten: ten, soLuong: sl });
+    }
+  }
+  return result;
+}
+
+function readTopHuy(v, startRow) {
+  var map = {};
+  var maxRow = Math.min(startRow + 10, v.length);
+  for (var r = startRow; r < maxRow; r++) {
+    for (var col = 7; col < Math.min(v[r].length, 100); col += 3) {
+      var t  = String(v[r][col] || '').trim();
+      var sl = Number(v[r][col+2]) || 0;
+      if (t && t !== 'Ten san pham' && t !== 'Tên sản phẩm') {
+        map[t] = (map[t] || 0) + sl;
+      }
+    }
+  }
+  return Object.keys(map).map(function(t){ return {ten:t, soLuong:map[t]}; })
+    .sort(function(a,b){ return b.soLuong - a.soLuong; })
+    .slice(0, 5);
+}
+
+function readMarketing(ss, tab) {
+  var sh = ss.getSheetByName(tab);
+  if (!sh) return { error: 'Tab not found: ' + tab };
+  var v = sh.getDataRange().getValues();
+  var n = function(r, c) { return Number(v[r] && v[r][c]) || 0; };
+  return {
+    leadAds:     { thucTe: n(4, 1), chiTieu: n(4, 2) },
+    leadTuNhien: { thucTe: n(5, 1), chiTieu: n(5, 2) },
+    tiLeChot:    { thucTe: n(6, 1), chiTieu: n(6, 2) },
+    khOffline:   { thucTe: n(7, 1), chiTieu: n(7, 2) },
+  };
+}
+
+// =============================================================
+// FABI_TATCACUAHANG — Top sản phẩm bán chạy real-time
+// Cột: A=Cửa hàng, D=Tên hàng, E=Nhóm món, I=Nguồn, N=Thời gian, P=Số lượng
+// =============================================================
+function readFabiTopProducts(ss, fabiRows) {
+  var v = fabiRows;
+  if (!v) {
+    var sh = ss.getSheetByName('Fabi_TatCaCuaHang');
+    if (!sh) return { error: 'Sheet Fabi_TatCaCuaHang not found' };
+    v = sh.getDataRange().getDisplayValues();
+  }
+  if (v.length < 2) return {};
+
+  var COL_CH    = 0;
+  var COL_TEN   = 3;
+  var COL_NHOM  = 4;
+  var COL_NGUON = 8;
+  var COL_NGAY  = 13;
+  var COL_SL    = 15;
+
+  var CH_MAP = {
+    'CS1': 'tueTinh', 'TUE TINH': 'tueTinh',
+    'CS2': 'timesCity', 'TIMESCITY': 'timesCity', 'TIMES CITY': 'timesCity',
+    'CS3': 'pbc', 'PHAN BOI CHAU': 'pbc',
+    'CS4': 'trungHoa', 'TRUNG HOA': 'trungHoa',
+  };
+
+  function normStr(s) {
+    return String(s||'').trim().toUpperCase()
+      .replace(/[àáảãạăắằẳẵặâấầẩẫậ]/gi,'A')
+      .replace(/[èéẻẽẹêếềểễệ]/gi,'E')
+      .replace(/[ìíỉĩị]/gi,'I')
+      .replace(/[òóỏõọôốồổỗộơớờởỡợ]/gi,'O')
+      .replace(/[ùúủũụưứừửữự]/gi,'U')
+      .replace(/[đ]/gi,'D')
+      .replace(/[ýỳỷỹỵ]/gi,'Y');
+  }
+
+  function mapCH(raw) {
+    var n = normStr(raw);
+    if (n.indexOf('CS1') !== -1) return 'tueTinh';
+    if (n.indexOf('CS2') !== -1) return 'timesCity';
+    if (n.indexOf('CS3') !== -1) return 'pbc';
+    if (n.indexOf('CS4') !== -1) return 'trungHoa';
+    for (var k in CH_MAP) {
+      if (n.indexOf(k) !== -1) return CH_MAP[k];
+    }
+    return null;
+  }
+
+  function mapNhom(raw) {
+    var n = normStr(raw);
+    if (n.indexOf('SINH NHAT') !== -1) return 'bsn';
+    if (n.indexOf('KEM NHO') !== -1)   return 'banhKemNho';
+    if (n.indexOf('BANH MI') !== -1)   return 'banhMi';
+    return 'banhKhac';
+  }
+
+  function parseDate(val) {
+    if (val instanceof Date) {
+      return { day: val.getDate(), month: val.getMonth()+1, year: val.getFullYear() };
+    }
+    var s = String(val || '').trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return { year: parseInt(m[1]), month: parseInt(m[2]), day: parseInt(m[3]) };
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return { day: parseInt(m[1]), month: parseInt(m[2]), year: parseInt(m[3]) };
+    return null;
+  }
+
+  var TARGET_MONTH = 11;
+  var TARGET_YEAR  = 2026;
+  var startRow = 2;
+
+  var acc = { tueTinh:{}, timesCity:{}, pbc:{}, trungHoa:{} };
+
+  for (var r = startRow; r < v.length; r++) {
+    var row = v[r];
+
+    var tenRaw = String(row[COL_TEN] || '').trim();
+    if (!tenRaw) continue;
+    var tenNorm = normStr(tenRaw);
+    if (tenNorm.indexOf('TRANG TRI') !== -1) continue;
+    if (tenNorm.indexOf('PHI VAN CHUYEN') !== -1) continue;
+    if (tenNorm.indexOf('PHI DICH VU') !== -1) continue;
+    if (tenNorm.indexOf('NEN ') === 0 || tenNorm === 'NEN') continue;
+    if (tenNorm.indexOf('HOP MICA') !== -1) continue;
+    if (tenNorm.indexOf('TAG MICA') !== -1) continue;
+    if (tenNorm.indexOf('DAO DIA') !== -1) continue;
+    if (tenNorm.indexOf('THIEP') !== -1) continue;
+    if (tenNorm.indexOf('MU SINH NHAT') !== -1) continue;
+
+    var nguon = String(row[COL_NGUON] || '').trim().toLowerCase();
+    if (nguon && nguon !== 'offline') continue;
+
+    var chKey = mapCH(row[COL_CH]);
+    if (!chKey) continue;
+
+    var nhomKey = mapNhom(row[COL_NHOM]);
+    var dateObj = parseDate(row[COL_NGAY]);
+    if (!dateObj) continue;
+
+    if (dateObj.month !== TARGET_MONTH || dateObj.year !== TARGET_YEAR) continue;
+
+    var day = dateObj.day;
+
+    var sl = parseFloat(String(row[COL_SL] || '0').replace(/[^\d.,]/g,'').replace(',','.')) || 0;
+    if (sl <= 0) continue;
+
+    if (!acc[chKey][day]) {
+      acc[chKey][day] = { bsn:{}, banhKemNho:{}, banhMi:{}, banhKhac:{} };
+    }
+    var nhomAcc = acc[chKey][day][nhomKey];
+    nhomAcc[tenRaw] = (nhomAcc[tenRaw] || 0) + sl;
+  }
+
+  var result = {};
+  ['tueTinh','timesCity','pbc','trungHoa'].forEach(function(ch) {
+    result[ch] = {};
+    for (var day in acc[ch]) {
+      result[ch][day] = {};
+      ['bsn','banhKemNho','banhMi','banhKhac'].forEach(function(nhom) {
+        var obj = acc[ch][day][nhom] || {};
+        result[ch][day][nhom] = Object.keys(obj)
+          .map(function(t) { return { ten: t, soLuong: obj[t] }; })
+          .sort(function(a,b) { return b.soLuong - a.soLuong; })
+          .slice(0, 10);
+      });
+    }
+  });
+
+  return result;
+}
+
+function readFabiTopOnlineProducts(ss, fabiRows) {
+  var v = fabiRows;
+  if (!v) {
+    var sh = ss.getSheetByName('Fabi_TatCaCuaHang');
+    if (!sh) return { error: 'Sheet Fabi_TatCaCuaHang not found' };
+    v = sh.getDataRange().getDisplayValues();
+  }
+  if (v.length < 2) return {};
+
+  var COL_CH = 0, COL_TEN = 3, COL_NHOM = 4, COL_NGUON = 8, COL_NGAY = 13, COL_SL = 15;
+  var CH_MAP = { 'CS1':'tueTinh','CS2':'timesCity','CS3':'pbc','CS4':'trungHoa' };
+  var TARGET_MONTH = 11, TARGET_YEAR = 2026;
+
+  function normStr(s) {
+    return String(s||'').trim().toUpperCase()
+      .replace(/[àáảãạăắằẳẵặâấầẩẫậ]/gi,'A').replace(/[èéẻẽẹêếềểễệ]/gi,'E')
+      .replace(/[ìíỉĩị]/gi,'I').replace(/[òóỏõọôốồổỗộơớờởỡợ]/gi,'O')
+      .replace(/[ùúủũụưứừửữự]/gi,'U').replace(/[đ]/gi,'D').replace(/[ýỳỷỹỵ]/gi,'Y');
+  }
+  function mapCH(raw) {
+    var n = normStr(raw);
+    if (n.indexOf('CS1')!==-1) return 'tueTinh';
+    if (n.indexOf('CS2')!==-1) return 'timesCity';
+    if (n.indexOf('CS3')!==-1) return 'pbc';
+    if (n.indexOf('CS4')!==-1) return 'trungHoa';
+    for (var k in CH_MAP) if (n.indexOf(k)!==-1) return CH_MAP[k];
+    return null;
+  }
+  function mapNhom(raw) {
+    var n = normStr(raw);
+    if (n.indexOf('SINH NHAT')!==-1) return 'bsn';
+    if (n.indexOf('KEM NHO')!==-1)   return 'banhKemNho';
+    if (n.indexOf('BANH MI')!==-1)   return 'banhMi';
+    return 'banhKhac';
+  }
+  function parseDate(val) {
+    if (val instanceof Date) return { day:val.getDate(), month:val.getMonth()+1, year:val.getFullYear() };
+    var s = String(val||'').trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return { year:parseInt(m[1]), month:parseInt(m[2]), day:parseInt(m[3]) };
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return { day:parseInt(m[1]), month:parseInt(m[2]), year:parseInt(m[3]) };
+    return null;
+  }
+
+  var acc = { tueTinh:{}, timesCity:{}, pbc:{}, trungHoa:{} };
+
+  for (var r = 2; r < v.length; r++) {
+    var row = v[r];
+    var tenRaw = String(row[COL_TEN]||'').trim();
+    if (!tenRaw) continue;
+    var tenNorm = normStr(tenRaw);
+    if (tenNorm.indexOf('TRANG TRI') !== -1) continue;
+    if (tenNorm.indexOf('PHI VAN CHUYEN') !== -1) continue;
+    if (tenNorm.indexOf('PHI DICH VU') !== -1) continue;
+    if (tenNorm.indexOf('NEN ') === 0 || tenNorm === 'NEN') continue;
+    if (tenNorm.indexOf('HOP MICA') !== -1) continue;
+    if (tenNorm.indexOf('TAG MICA') !== -1) continue;
+    if (tenNorm.indexOf('DAO DIA') !== -1) continue;
+    if (tenNorm.indexOf('THIEP') !== -1) continue;
+    if (tenNorm.indexOf('MU SINH NHAT') !== -1) continue;
+    var nguon = String(row[COL_NGUON]||'').trim().toLowerCase();
+    if (nguon === 'offline') continue;
+    var chKey = mapCH(row[COL_CH]);
+    if (!chKey) continue;
+    var nhomKey = mapNhom(row[COL_NHOM]);
+    var dateObj = parseDate(row[COL_NGAY]);
+    if (!dateObj || dateObj.month !== TARGET_MONTH || dateObj.year !== TARGET_YEAR) continue;
+    var day = dateObj.day;
+    var sl = parseFloat(String(row[COL_SL]||'0').replace(/[^\d.,]/g,'').replace(',','.')) || 0;
+    if (sl <= 0) continue;
+    if (!acc[chKey][day]) acc[chKey][day] = { bsn:{}, banhKemNho:{}, banhMi:{}, banhKhac:{} };
+    var nhomAcc = acc[chKey][day][nhomKey];
+    nhomAcc[tenRaw] = (nhomAcc[tenRaw]||0) + sl;
+  }
+
+  var result = {};
+  ['tueTinh','timesCity','pbc','trungHoa'].forEach(function(ch) {
+    result[ch] = {};
+    for (var day in acc[ch]) {
+      result[ch][day] = {};
+      ['bsn','banhKemNho','banhMi','banhKhac'].forEach(function(nhom) {
+        var obj = acc[ch][day][nhom] || {};
+        result[ch][day][nhom] = Object.keys(obj)
+          .map(function(t) { return { ten:t, soLuong:obj[t] }; })
+          .sort(function(a,b) { return b.soLuong - a.soLuong; })
+          .slice(0, 10);
+      });
+    }
+  });
+  return result;
+}
+
+// =============================================================
+// FABI_TATCACUAHANG — Tinh toan KPI Thuc te (Doanh thu, So don, GTTB, BSN, Daily, Trung Thu)
+// theo tung ngay, tung cua hang, ca Online va Offline
+// Cot: A=Cua hang(0), C=Ma hang(2), E=Nhom mon(4), I=Nguon(8), L=Ma hoa don(11),
+//      N=Thoi gian(13), P=So luong(15), AN=Doanh thu da tru giam gia/chiet khau(39)
+// =============================================================
+function readFabiKPI(ss, fabiRows) {
+  var v = fabiRows;
+  if (!v) {
+    var sh = ss.getSheetByName('Fabi_TatCaCuaHang');
+    if (!sh) return { error: 'Sheet Fabi_TatCaCuaHang not found' };
+    v = sh.getDataRange().getDisplayValues();
+  }
+  if (v.length < 3) return {};
+
+  var COL_CH    = 0;
+  var COL_MAHANG = 2;
+  var COL_TEN   = 3;
+  var COL_NHOM  = 4;
+  var COL_NGUON = 8;
+  var COL_MAHD  = 11;
+  var COL_NGAY  = 13;
+  var COL_SL    = 15;
+  var COL_TT    = 39; // AN: Doanh thu đã net
+
+  var TARGET_MONTH = 11;
+  var TARGET_YEAR  = 2026;
+  var startRow = 2;
+
+  // Tìm cột "Loại món" từ header row (row 0 hoặc 1)
+  var COL_LOAI = -1;
+  for (var hi = 0; hi < Math.min(startRow, v.length); hi++) {
+    for (var ci = 0; ci < v[hi].length; ci++) {
+      if (String(v[hi][ci]).trim() === 'Loại món') { COL_LOAI = ci; break; }
+    }
+    if (COL_LOAI >= 0) break;
+  }
+
+  function normStr(s) {
+    return String(s||'').trim().toUpperCase()
+      .replace(/[àáảãạăắằẳẵặâấầẩẫậ]/gi,'A')
+      .replace(/[èéẻẽẹêếềểễệ]/gi,'E')
+      .replace(/[ìíỉĩị]/gi,'I')
+      .replace(/[òóỏõọôốồổỗộơớờởỡợ]/gi,'O')
+      .replace(/[ùúủũụưứừửữự]/gi,'U')
+      .replace(/[đ]/gi,'D')
+      .replace(/[ýỳỷỹỵ]/gi,'Y')
+      // FIX: bỏ dấu phẩy để so khớp ổn định với "ĐỒ ĂN, ĐỒ UỐNG TM"
+      .replace(/,/g,'');
+  }
+
+  function mapCH(raw) {
+    var n = normStr(raw);
+    if (n.indexOf('CS1') !== -1) return 'tueTinh';
+    if (n.indexOf('CS2') !== -1) return 'timesCity';
+    if (n.indexOf('CS3') !== -1) return 'pbc';
+    if (n.indexOf('CS4') !== -1) return 'trungHoa';
+    return null;
+  }
+
+  function isBSN(raw) {
+    return normStr(raw).indexOf('SINH NHAT') !== -1;
+  }
+
+  function parseDate(val) {
+    var s = String(val || '').trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return { year: parseInt(m[1]), month: parseInt(m[2]), day: parseInt(m[3]) };
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return { day: parseInt(m[1]), month: parseInt(m[2]), year: parseInt(m[3]) };
+    return null;
+  }
+
+  function parseMoney(val) {
+    var s = String(val || '0').trim();
+    s = s.replace(/[^\d.,-]/g, ''); // bỏ ký tự "đ"/"₫", khoảng trắng...
+    if (!s) return 0;
+
+    // Tự nhận diện dấu thập phân: dấu phân cách CUỐI CÙNG (chấm hoặc phẩy)
+    // mà có đúng 2 chữ số đứng sau nó chính là dấu thập phân.
+    // Xử lý được cả 2 format: "70.000,00" (VN) và "60,000.00" (quốc tế).
+    var lastDot = s.lastIndexOf('.');
+    var lastComma = s.lastIndexOf(',');
+    var decimalSep = Math.max(lastDot, lastComma);
+
+    if (decimalSep !== -1 && (s.length - decimalSep - 1) === 2) {
+      var intPart = s.slice(0, decimalSep).replace(/[.,]/g, '');
+      var decPart = s.slice(decimalSep + 1);
+      s = intPart + '.' + decPart;
+    } else {
+      // Không có phần thập phân rõ ràng → bỏ hết dấu phân cách (đều là phân nghìn)
+      s = s.replace(/[.,]/g, '');
+    }
+
+    var num = parseFloat(s) || 0;
+    return Math.round(num); // VND không có phần lẻ, round cho chắc
+  }
+
+  var acc = {};
+  ['tueTinh','timesCity','pbc','trungHoa'].forEach(function(ch) {
+    acc[ch] = {};
+  });
+
+  for (var r = startRow; r < v.length; r++) {
+    var row = v[r];
+
+    var chKey = mapCH(row[COL_CH]);
+    if (!chKey) continue;
+
+    var dateObj = parseDate(row[COL_NGAY]);
+    if (!dateObj) continue;
+    if (dateObj.month !== TARGET_MONTH || dateObj.year !== TARGET_YEAR) continue;
+    var day = dateObj.day;
+
+    var nguonRaw = String(row[COL_NGUON] || '').trim().toLowerCase();
+    var isOffline = (nguonRaw === 'offline');
+    var nguonKey = isOffline ? 'offline' : 'online';
+
+    var maHD = String(row[COL_MAHD] || '').trim();
+    if (!maHD) continue;
+
+    // Bỏ phí vận chuyển (mã hàng 20102003) khỏi doanh thu
+    if (String(row[COL_MAHANG] || '').trim() === '20102003') continue;
+
+    var thanhTien = parseMoney(row[COL_TT]);
+    var soLuong = parseMoney(row[COL_SL]);
+    var nhomRaw = String(row[COL_NHOM] || '');
+    var loaiMon = COL_LOAI >= 0 ? normStr(String(row[COL_LOAI] || '')) : '';
+    // FIX (từ T10): Seasonal giờ tổng quát hoá cho MỌI dịp lễ (8/3, 20/10,
+    // 20/11, Tết, Trung Thu...), không chỉ riêng Trung Thu — nhận diện qua
+    // cột "Loại món" chứa "Mùa vụ" (vd "BSN Bloom/Petal" dịp 20/10 cũng tính
+    // vào Seasonal dù tên có chữ BSN). Giữ thêm điều kiện Nhóm món TM cũ
+    // (Trung Thu) làm lưới an toàn, phòng mặt hàng chưa gắn tag Mùa vụ.
+    var isSeasonal = loaiMon.indexOf('MUA VU') !== -1
+      || normStr(nhomRaw).indexOf('DO AN DO UONG TM') !== -1; // Trung Thu (rule cũ)
+    var bsn = !isSeasonal && isBSN(nhomRaw);
+    var isTM = isSeasonal; // giữ tên biến cũ cho phần code bên dưới
+    var isDecor = bsn && loaiMon.indexOf('BO TRANG TRI') !== -1;
+
+    if (!acc[chKey][day]) acc[chKey][day] = {};
+    if (!acc[chKey][day][nguonKey]) {
+      acc[chKey][day][nguonKey] = {
+        dtTong: 0, donSet: {},
+        dtBSN: 0, slBSN: 0, donBSNSet: {},
+        dtDaily: 0,
+        dtTrungThu: 0,
+        donTrungThuHasTM: {},    // đơn có ít nhất 1 mặt hàng TM
+        donTrungThuHasNonTM: {}, // đơn có ít nhất 1 mặt hàng KHÔNG phải TM
+      };
+    }
+    var d = acc[chKey][day][nguonKey];
+
+    // FIX: Doanh thu/Số đơn tổng KHÔNG cộng Trung Thu (TM) — Trung Thu đã có
+    // mục Seasonal riêng, tránh cộng lặp vào Doanh thu tổng.
+    if (!isTM) d.dtTong += thanhTien;
+    if (!isTM) d.donSet[maHD] = true;
+
+    if (bsn) {
+      d.dtBSN += thanhTien;
+      if (!isDecor) d.slBSN += soLuong;
+      d.donBSNSet[maHD] = true;
+      d.donTrungThuHasNonTM[maHD] = true; // BSN không phải TM
+    } else if (isTM) {
+      d.dtTrungThu += thanhTien;
+      d.donTrungThuHasTM[maHD] = true;
+    } else {
+      d.dtDaily += thanhTien;
+      d.donTrungThuHasNonTM[maHD] = true; // mặt hàng thường không phải TM
+    }
+  }
+
+  function countKeys(obj) { return Object.keys(obj).length; }
+
+  var result = {};
+  ['tueTinh','timesCity','pbc','trungHoa'].forEach(function(ch) {
+    result[ch] = {};
+    for (var day in acc[ch]) {
+      result[ch][day] = {};
+      ['online','offline'].forEach(function(nguonKey) {
+        var d = acc[ch][day][nguonKey];
+        if (!d) {
+          result[ch][day][nguonKey] = {
+            doanhThu: 0, soDon: 0, gttbDon: 0,
+            dtBSN: 0, soBSN: 0, gttbBSN: 0,
+            dtDaily: 0, soDonDaily: 0, gttbDaily: 0,
+          };
+          return;
+        }
+        // soDon (donSet) giờ đã KHÔNG còn chứa đơn Trung Thu thuần (isTM
+        // không thêm vào donSet nữa) nên không cần trừ soDonTrungThu ở đây
+        // nữa — chỉ còn BSN + Daily.
+        var soDon = countKeys(d.donSet);
+        var soDonBSN = countKeys(d.donBSNSet);
+        // Đếm đơn Trung Thu: chỉ đơn có toàn bộ mặt hàng là TM (không có mặt hàng nào khác)
+        var soDonTrungThu = 0;
+        for (var hd in d.donTrungThuHasTM) {
+          if (!d.donTrungThuHasNonTM[hd]) soDonTrungThu++;
+        }
+        var soDonDaily = Math.max(0, soDon - soDonBSN);
+        result[ch][day][nguonKey] = {
+          doanhThu:      Math.round(d.dtTong),
+          soDon:         soDon,
+          gttbDon:       soDon > 0 ? Math.round(d.dtTong / soDon) : 0,
+          dtBSN:         Math.round(d.dtBSN),
+          soBSN:         Math.round(d.slBSN),
+          gttbBSN:       soDonBSN > 0 ? Math.round(d.dtBSN / soDonBSN) : 0,
+          dtDaily:       Math.round(d.dtDaily),
+          soDonDaily:    soDonDaily,
+          gttbDaily:     soDonDaily > 0 ? Math.round(d.dtDaily / soDonDaily) : 0,
+          dtTrungThu:    Math.round(d.dtTrungThu),
+          soDonTrungThu: soDonTrungThu,
+        };
+      });
+    }
+  });
+
+  return result;
+}
+
+// =============================================================
+// FABI_TATCACUAHANG — Phân loại KH cũ/mới/Không TĐ theo ngày, theo CH
+// =============================================================
+// Mỗi tháng là 1 Google Sheet RIÊNG (tab Fabi_TatCaCuaHang của tháng hiện tại
+// chỉ chứa dữ liệu tháng đó) — nên để tính KH cũ/mới đúng, phải MỞ CHÉO sang
+// 3 Google Sheet của 3 tháng liền trước để lấy "ngày mua gần nhất" thật.
+// ⚠️ Khi đổi ACTIVE_MONTH sang tháng mới: bỏ tháng cũ nhất trong danh sách
+// dưới, thêm ID sheet của tháng vừa kết thúc vào cuối.
+var PREV_MONTHS_SHEETS = [
+  { id: '14C9Wy9kcsqmUpCtFNEJ0xW5THlJqr7ZnikUGROFLRWs', month: 8, year: 2026 }, // T8/2026
+  { id: '1RJ_rFxAvtVnfG_39sbMyv-Rqtf7P4A6tPK_g1cGBAbQ', month: 9, year: 2026 }, // T9/2026
+  { id: '11G8RhoK8T9swavGh5E_dKyWFO7FXpNK-P5GdqDT8-L0', month: 10, year: 2026 }, // T10/2026
+];
+
+// Định nghĩa "KH cũ quay lại ≤90 ngày" theo đúng nghiệp vụ (không phải đếm
+// đúng 90 ngày lịch): khách có hoá đơn trong 1 trong 3 tháng liền trước
+// (T6/T7/T8) = ≤90 ngày · khách chỉ có hoá đơn từ tháng 5 trở về trước
+// (không xuất hiện ở T6-T8) = >90 ngày. Mốc cắt = ngày 1 của tháng sớm
+// nhất trong PREV_MONTHS_SHEETS (hiện là 1/8/2026) — tự tính min, không
+// phụ thuộc thứ tự phần tử trong mảng.
+var KH_RECENT_CUTOFF_ABSDAY = (function() {
+  var minAbsDay = Infinity;
+  PREV_MONTHS_SHEETS.forEach(function(src) {
+    var d = Math.floor(Date.UTC(src.year, src.month - 1, 1) / 86400000);
+    if (d < minAbsDay) minAbsDay = d;
+  });
+  return minAbsDay;
+})();
+
+// Chạy 1 lần thủ công để xin quyền truy cập 3 Google Sheet tháng trước
+// (bắt buộc trước khi loadKHHistorySeed_ có thể mở chéo được).
+function authorizeHistorySheets() {
+  PREV_MONTHS_SHEETS.forEach(function(src) {
+    try {
+      var extSS = SpreadsheetApp.openById(src.id);
+      var extSh = extSS.getSheetByName('Fabi_TatCaCuaHang');
+      Logger.log('T' + src.month + ': ' + (extSh ? 'OK, ' + extSh.getLastRow() + ' dòng' : 'KHÔNG THẤY TAB Fabi_TatCaCuaHang'));
+    } catch (err) {
+      Logger.log('T' + src.month + ': LỖI mở sheet ' + src.id + ' — ' + err);
+    }
+  });
+}
+
+// Đọc lịch sử mua hàng để "mồi" trước khi tính KH cũ/mới cho tháng hiện tại
+// — tránh nhận nhầm khách quay lại sau 1-3 tháng thành "KH mới", hoặc tính
+// sai khoảng cách ngày mua (gap) vì không thấy được lần mua gần nhất thật.
+// Cache riêng cho kết quả loadKHHistorySeed_ — tách khỏi cache chính của
+// doGet (600s) vì việc mở chéo 3 Google Sheet tháng trước (hàng chục nghìn
+// dòng mỗi sheet) rất chậm, mà dữ liệu các tháng đã qua gần như không đổi.
+// TTL 6h (giới hạn tối đa của CacheService) — mỗi lần "Làm mới"/bust cache
+// chính sẽ KHÔNG còn kéo theo việc đọc lại 3 sheet ngoài mỗi lần, tránh lag.
+// Seed JSON thường ~250-300KB (toàn bộ KH 3 tháng x 4 CH) — vượt giới hạn
+// 100KB/key của CacheService, nên phải CHIA NHỎ thành nhiều chunk rồi ghép
+// lại khi đọc.
+var KH_HISTORY_SEED_CACHE_PREFIX = 'khHistorySeed_t11_';
+var KH_HISTORY_SEED_CACHE_TTL = 21600; // 6 giờ (max CacheService cho phép)
+var KH_HISTORY_SEED_CHUNK_SIZE = 90000; // ký tự/chunk, chừa biên an toàn dưới 100KB
+
+function loadKHHistorySeed_(ss, fabiRows) {
+  var cache = CacheService.getScriptCache();
+  var cached = loadKHHistorySeedFromCache_(cache);
+  if (cached) return cached;
+
+  var seed = loadKHHistorySeed_impl_(ss, fabiRows);
+  saveKHHistorySeedToCache_(cache, seed);
+  return seed;
+}
+
+function loadKHHistorySeedFromCache_(cache) {
+  var metaRaw = cache.get(KH_HISTORY_SEED_CACHE_PREFIX + 'meta');
+  if (!metaRaw) return null;
+  try {
+    var meta = JSON.parse(metaRaw);
+    var parts = [];
+    for (var i = 0; i < meta.n; i++) {
+      var part = cache.get(KH_HISTORY_SEED_CACHE_PREFIX + 'c' + i);
+      if (part === null) return null; // thiếu 1 chunk (hết hạn lệch nhau) → tính lại cho chắc
+      parts.push(part);
+    }
+    return JSON.parse(parts.join(''));
+  } catch (e) {
+    return null; // cache hỏng/không parse được → tính lại
+  }
+}
+
+function saveKHHistorySeedToCache_(cache, seed) {
+  try {
+    var json = JSON.stringify(seed);
+    var chunks = [];
+    for (var i = 0; i < json.length; i += KH_HISTORY_SEED_CHUNK_SIZE) {
+      chunks.push(json.slice(i, i + KH_HISTORY_SEED_CHUNK_SIZE));
+    }
+    var toPut = {};
+    for (var c = 0; c < chunks.length; c++) {
+      toPut[KH_HISTORY_SEED_CACHE_PREFIX + 'c' + c] = chunks[c];
+    }
+    toPut[KH_HISTORY_SEED_CACHE_PREFIX + 'meta'] = JSON.stringify({ n: chunks.length });
+    cache.putAll(toPut, KH_HISTORY_SEED_CACHE_TTL);
+  } catch (e) {
+    Logger.log('saveKHHistorySeedToCache_: không cache được — ' + e);
+    // Không sao — lần gọi sau sẽ tính lại từ đầu, vẫn ra kết quả đúng.
+  }
+}
+
+// Chạy thủ công khi cần ép tính lại ngay (ví dụ vừa cập nhật LichSuKH_T3T4T5)
+function clearKHHistorySeedCache() {
+  var cache = CacheService.getScriptCache();
+  var metaRaw = cache.get(KH_HISTORY_SEED_CACHE_PREFIX + 'meta');
+  if (metaRaw) {
+    try {
+      var meta = JSON.parse(metaRaw);
+      var keys = [KH_HISTORY_SEED_CACHE_PREFIX + 'meta'];
+      for (var i = 0; i < meta.n; i++) keys.push(KH_HISTORY_SEED_CACHE_PREFIX + 'c' + i);
+      cache.removeAll(keys);
+    } catch (e) {}
+  }
+  Logger.log('Đã xoá cache lịch sử KH — lần gọi doGet tiếp theo sẽ tính lại từ đầu.');
+}
+
+function loadKHHistorySeed_impl_(ss, fabiRows) {
+  function toAbsDay(y, m, d) {
+    return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+  }
+
+  var seed = {}; // key = ch+'_'+sdt -> absDay
+
+  // ── Nguồn 1: LichSuKH_T3T4T5 (sheet tổng hợp lịch sử cũ, mồi nền T3-T5) ──
+  var sh = ss.getSheetByName('LichSuKH_T3T4T5');
+  if (sh) {
+    var v = sh.getDataRange().getDisplayValues();
+    for (var r = 1; r < v.length; r++) {
+      var ch = String(v[r][0] || '').trim();
+      var sdt = String(v[r][1] || '').trim().replace(/[^\d]/g, '');
+      if (sdt && sdt.length === 9) sdt = '0' + sdt;
+      var dateStr = String(v[r][2] || '').trim();
+      if (!ch || !sdt || !dateStr) continue;
+      var mp = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (!mp) continue;
+      var absDay = toAbsDay(parseInt(mp[3]), parseInt(mp[2]), parseInt(mp[1]));
+      var key = ch + '_' + sdt;
+      if (seed[key] === undefined || absDay > seed[key]) seed[key] = absDay;
+    }
+  }
+
+  // ── Nguồn 2: mở chéo sang Google Sheet của 3 tháng liền trước (xem
+  // PREV_MONTHS_SHEETS) — vì mỗi tháng là 1 file riêng nên không thể tự tìm
+  // ra lịch sử T6-T8 chỉ từ trong file tháng hiện tại. ──
+  var COL_CH   = 0;
+  var COL_MAHD = 11;
+  var COL_NGAY = 13;
+  var COL_SDT  = 37;
+
+  function normCH(raw) {
+    var n = String(raw||'').trim().toUpperCase()
+      .replace(/[àáảãạăắằẳẵặâấầẩẫậ]/gi,'A').replace(/[đ]/gi,'D');
+    if (n.indexOf('CS1') !== -1) return 'tueTinh';
+    if (n.indexOf('CS2') !== -1) return 'timesCity';
+    if (n.indexOf('CS3') !== -1) return 'pbc';
+    if (n.indexOf('CS4') !== -1) return 'trungHoa';
+    return null;
+  }
+  function parseDate2(val) {
+    var s = String(val || '').trim();
+    var mp2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (mp2) return { year:parseInt(mp2[1]), month:parseInt(mp2[2]), day:parseInt(mp2[3]) };
+    mp2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (mp2) return { day:parseInt(mp2[1]), month:parseInt(mp2[2]), year:parseInt(mp2[3]) };
+    return null;
+  }
+
+  PREV_MONTHS_SHEETS.forEach(function(src) {
+    var fv;
+    try {
+      var extSS = SpreadsheetApp.openById(src.id);
+      var extSh = extSS.getSheetByName('Fabi_TatCaCuaHang');
+      if (!extSh) return;
+      fv = extSh.getDataRange().getDisplayValues();
+    } catch (err) {
+      // Không mở được (chưa cấp quyền, đổi ID, sheet bị xoá...) — bỏ qua,
+      // không để lỗi 1 tháng làm hỏng cả doGet.
+      Logger.log('loadKHHistorySeed_: lỗi mở sheet T' + src.month + ' — ' + err);
+      return;
+    }
+
+    var invoiceSeen = {};
+    for (var r2 = 1; r2 < fv.length; r2++) {
+      var row = fv[r2];
+      var dateObj = parseDate2(row[COL_NGAY]);
+      if (!dateObj || dateObj.year !== src.year || dateObj.month !== src.month) continue;
+      var maHD = String(row[COL_MAHD] || '').trim();
+      if (!maHD || invoiceSeen[maHD]) continue;
+      invoiceSeen[maHD] = true;
+      var chKey = normCH(row[COL_CH]);
+      if (!chKey) continue;
+      var sdt2 = String(row[COL_SDT] || '').trim().replace(/[^\d]/g, '');
+      if (!sdt2) continue;
+      if (sdt2.indexOf('84') === 0 && sdt2.length > 9) sdt2 = '0' + sdt2.slice(2);
+      if (sdt2.length === 9) sdt2 = '0' + sdt2;
+      var absDay2 = toAbsDay(dateObj.year, dateObj.month, dateObj.day);
+      var key2 = chKey + '_' + sdt2;
+      if (seed[key2] === undefined || absDay2 > seed[key2]) seed[key2] = absDay2;
+    }
+  });
+
+  return seed;
+}
+
+function readFabiKHClassification(ss, fabiRows, historySeedIn) {
+  var v = fabiRows;
+  if (!v) {
+    var sh = ss.getSheetByName('Fabi_TatCaCuaHang');
+    if (!sh) return { error: 'Sheet Fabi_TatCaCuaHang not found' };
+    v = sh.getDataRange().getDisplayValues();
+  }
+  if (v.length < 3) return {};
+
+  var COL_CH    = 0;
+  var COL_NGUON = 8;
+  var COL_MAHD  = 11;
+  var COL_NGAY  = 13;
+  var COL_SDT   = 37;
+
+  var TARGET_MONTH = 11;
+  var TARGET_YEAR  = 2026;
+  var startRow = 2;
+
+  function toAbsDay(y, m, d) {
+    return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+  }
+
+  function normStr(s) {
+    return String(s||'').trim().toUpperCase()
+      .replace(/[àáảãạăắằẳẵặâấầẩẫậ]/gi,'A')
+      .replace(/[èéẻẽẹêếềểễệ]/gi,'E')
+      .replace(/[ìíỉĩị]/gi,'I')
+      .replace(/[òóỏõọôốồổỗộơớờởỡợ]/gi,'O')
+      .replace(/[ùúủũụưứừửữự]/gi,'U')
+      .replace(/[đ]/gi,'D')
+      .replace(/[ýỳỷỹỵ]/gi,'Y');
+  }
+
+  function mapCH(raw) {
+    var n = normStr(raw);
+    if (n.indexOf('CS1') !== -1) return 'tueTinh';
+    if (n.indexOf('CS2') !== -1) return 'timesCity';
+    if (n.indexOf('CS3') !== -1) return 'pbc';
+    if (n.indexOf('CS4') !== -1) return 'trungHoa';
+    return null;
+  }
+
+  function parseDate(val) {
+    var s = String(val || '').trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return { year: parseInt(m[1]), month: parseInt(m[2]), day: parseInt(m[3]) };
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return { day: parseInt(m[1]), month: parseInt(m[2]), year: parseInt(m[3]) };
+    return null;
+  }
+
+  function normPhone(raw) {
+    var s = String(raw || '').trim().replace(/[^\d]/g, '');
+    if (!s) return '';
+    if (s.indexOf('84') === 0 && s.length > 9) s = '0' + s.slice(2);
+    return s;
+  }
+
+  var historySeed = historySeedIn || loadKHHistorySeed_(ss, v);
+
+  var invoiceMap = {};
+  for (var r = startRow; r < v.length; r++) {
+    var row = v[r];
+
+    var chKey = mapCH(row[COL_CH]);
+    if (!chKey) continue;
+
+    var nguonRaw = String(row[COL_NGUON] || '').trim().toLowerCase();
+    if (nguonRaw !== 'offline') continue;
+
+    var maHD = String(row[COL_MAHD] || '').trim();
+    if (!maHD) continue;
+
+    var dateObj = parseDate(row[COL_NGAY]);
+    if (!dateObj) continue;
+    if (dateObj.month !== TARGET_MONTH || dateObj.year !== TARGET_YEAR) continue;
+
+    var key = chKey + '_' + maHD;
+    if (invoiceMap[key]) continue;
+
+    invoiceMap[key] = {
+      ch:  chKey,
+      day: dateObj.day,
+      absDay: toAbsDay(dateObj.year, dateObj.month, dateObj.day),
+      sdt: normPhone(row[COL_SDT]),
+    };
+  }
+
+  var CH_KEYS = ['tueTinh','timesCity','pbc','trungHoa'];
+  var byCH = {};
+  CH_KEYS.forEach(function(ch) { byCH[ch] = []; });
+  for (var k in invoiceMap) {
+    byCH[invoiceMap[k].ch].push(invoiceMap[k]);
+  }
+
+  var result = {};
+  CH_KEYS.forEach(function(ch) {
+    var list = byCH[ch];
+    list.sort(function(a, b) { return a.absDay - b.absDay; });
+
+    // Mồi lastSeenAbsDay từ lịch sử T3-T5 (nếu có) trước khi xử lý tháng 6
+    var lastSeenAbsDay = {};
+    for (var key in historySeed) {
+      if (key.indexOf(ch + '_') === 0) {
+        var sdtPart = key.slice(ch.length + 1);
+        lastSeenAbsDay[sdtPart] = historySeed[key];
+      }
+    }
+
+    var dayAgg = {};
+
+    list.forEach(function(inv) {
+      if (!dayAgg[inv.day]) {
+        dayAgg[inv.day] = { tongDon:0, donCu:0, cu90:0, cuGt90:0, donMoi:0, donKhongTD:0 };
+      }
+      var agg = dayAgg[inv.day];
+      agg.tongDon++;
+
+      if (!inv.sdt) {
+        agg.donKhongTD++;
+        return;
+      }
+
+      if (lastSeenAbsDay[inv.sdt] === undefined) {
+        agg.donMoi++;
+      } else {
+        agg.donCu++;
+        // ≤90 ngày = lần mua gần nhất rơi vào T6/T7/T8 (hoặc trong chính
+        // tháng đang xét) · >90 ngày = lần mua gần nhất từ T5 trở về trước.
+        if (lastSeenAbsDay[inv.sdt] >= KH_RECENT_CUTOFF_ABSDAY) agg.cu90++;
+        else agg.cuGt90++;
+      }
+      lastSeenAbsDay[inv.sdt] = inv.absDay;
+    });
+
+    result[ch] = {};
+    for (var day in dayAgg) {
+      var a = dayAgg[day];
+      result[ch][day] = {
+        tongDon:    a.tongDon,
+        donCu:      a.donCu,
+        cu90:       a.cu90,
+        cuGt90:     a.cuGt90,
+        donMoi:     a.donMoi,
+        donKhongTD: a.donKhongTD,
+        pctCu90:    a.donCu > 0 ? Math.round(a.cu90 / a.donCu * 100) : 0,
+        pctCuGt90:  a.donCu > 0 ? Math.round(a.cuGt90 / a.donCu * 100) : 0,
+        pctCu2:     a.tongDon > 0 ? Math.round(a.donCu / a.tongDon * 100) : 0,
+        pctMoi2:    a.tongDon > 0 ? Math.round(a.donMoi / a.tongDon * 100) : 0,
+        pctKhongTD: a.tongDon > 0 ? Math.round(a.donKhongTD / a.tongDon * 100) : 0,
+      };
+    }
+  });
+
+  return result;
+}
+
+// =============================================================
+// FABI_TATCACUAHANG — Phân loại KH cũ/mới · ONLINE (không offline)
+// Seed lịch sử từ TẤT CẢ nguồn trong LichSuKH_T3T4T5
+// =============================================================
+function readFabiKHOnlineClassification(ss, fabiRows, historySeedIn) {
+  var v = fabiRows;
+  if (!v) {
+    var sh = ss.getSheetByName('Fabi_TatCaCuaHang');
+    if (!sh) return { error: 'Sheet Fabi_TatCaCuaHang not found' };
+    v = sh.getDataRange().getDisplayValues();
+  }
+  if (v.length < 3) return {};
+
+  var COL_NGUON = 8;
+  var COL_MAHD  = 11;
+  var COL_NGAY  = 13;
+  var COL_SDT   = 37;
+
+  var TARGET_MONTH = 11;
+  var TARGET_YEAR  = 2026;
+
+  function toAbsDay(y, m, d) { return Math.floor(Date.UTC(y, m-1, d) / 86400000); }
+
+  function parseDate(val) {
+    var s = String(val || '').trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return { year: parseInt(m[1]), month: parseInt(m[2]), day: parseInt(m[3]) };
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return { day: parseInt(m[1]), month: parseInt(m[2]), year: parseInt(m[3]) };
+    return null;
+  }
+
+  function normPhone(raw) {
+    var s = String(raw || '').trim().replace(/[^\d]/g, '');
+    if (!s) return '';
+    if (s.indexOf('84') === 0 && s.length > 9) s = '0' + s.slice(2);
+    return s;
+  }
+
+  // Seed lastSeenAbsDay từ lịch sử — TẤT CẢ nguồn (bỏ qua phần ch_, chỉ lấy sdt)
+  var historySeed = historySeedIn || loadKHHistorySeed_(ss, v);
+  var lastSeenAbsDay = {};
+  for (var hKey in historySeed) {
+    var underIdx = hKey.indexOf('_');
+    if (underIdx === -1) continue;
+    var sdtH = hKey.slice(underIdx + 1);
+    if (lastSeenAbsDay[sdtH] === undefined || historySeed[hKey] > lastSeenAbsDay[sdtH]) {
+      lastSeenAbsDay[sdtH] = historySeed[hKey];
+    }
+  }
+
+  // Gom hóa đơn online trong tháng (dedup theo maHD)
+  var invoiceMap = {};
+  for (var r = 2; r < v.length; r++) {
+    var row = v[r];
+    var nguon = String(row[COL_NGUON] || '').trim().toLowerCase();
+    if (nguon === 'offline') continue;
+
+    var maHD = String(row[COL_MAHD] || '').trim();
+    if (!maHD) continue;
+    if (invoiceMap[maHD]) continue;
+
+    var dateObj = parseDate(row[COL_NGAY]);
+    if (!dateObj || dateObj.month !== TARGET_MONTH || dateObj.year !== TARGET_YEAR) continue;
+
+    invoiceMap[maHD] = {
+      day:    dateObj.day,
+      absDay: toAbsDay(dateObj.year, dateObj.month, dateObj.day),
+      sdt:    normPhone(row[COL_SDT]),
+    };
+  }
+
+  // Sort theo ngày tăng dần rồi phân loại
+  var list = [];
+  for (var k in invoiceMap) list.push(invoiceMap[k]);
+  list.sort(function(a, b) { return a.absDay - b.absDay; });
+
+  var dayAgg = {};
+  list.forEach(function(inv) {
+    if (!dayAgg[inv.day]) dayAgg[inv.day] = { tongDon:0, donCu:0, cu90:0, cuGt90:0, donMoi:0, donKhongTD:0 };
+    var agg = dayAgg[inv.day];
+    agg.tongDon++;
+
+    if (!inv.sdt) { agg.donKhongTD++; return; }
+
+    if (lastSeenAbsDay[inv.sdt] === undefined) {
+      agg.donMoi++;
+    } else {
+      agg.donCu++;
+      // ≤90 ngày = lần mua gần nhất rơi vào T6/T7/T8 (hoặc trong chính
+      // tháng đang xét) · >90 ngày = lần mua gần nhất từ T5 trở về trước.
+      if (lastSeenAbsDay[inv.sdt] >= KH_RECENT_CUTOFF_ABSDAY) agg.cu90++;
+      else agg.cuGt90++;
+    }
+    lastSeenAbsDay[inv.sdt] = inv.absDay;
+  });
+
+  var result = {};
+  for (var day in dayAgg) {
+    var a = dayAgg[day];
+    result[day] = {
+      tongDon:    a.tongDon,
+      donCu:      a.donCu,
+      cu90:       a.cu90,
+      cuGt90:     a.cuGt90,
+      donMoi:     a.donMoi,
+      donKhongTD: a.donKhongTD,
+      pctCu90:    a.donCu > 0 ? Math.round(a.cu90    / a.donCu   * 100) : 0,
+      pctCuGt90:  a.donCu > 0 ? Math.round(a.cuGt90  / a.donCu   * 100) : 0,
+      pctCu2:     a.tongDon > 0 ? Math.round(a.donCu     / a.tongDon * 100) : 0,
+      pctMoi2:    a.tongDon > 0 ? Math.round(a.donMoi    / a.tongDon * 100) : 0,
+      pctKhongTD: a.tongDon > 0 ? Math.round(a.donKhongTD/ a.tongDon * 100) : 0,
+    };
+  }
+  return result;
+}
+
+// =============================================================
+// FABI_TATCACUAHANG — Phân bổ số item/đơn (không tính đơn BSN)
+// =============================================================
+function readFabiItemsDistribution(ss, fabiRows) {
+  var v = fabiRows;
+  if (!v) {
+    var sh = ss.getSheetByName('Fabi_TatCaCuaHang');
+    if (!sh) return { error: 'Sheet Fabi_TatCaCuaHang not found' };
+    v = sh.getDataRange().getDisplayValues();
+  }
+  if (v.length < 3) return {};
+
+  var COL_CH    = 0;
+  var COL_NHOM  = 4;
+  var COL_NGUON = 8;
+  var COL_MAHD  = 11;
+  var COL_NGAY  = 13;
+
+  var TARGET_MONTH = 11;
+  var TARGET_YEAR  = 2026;
+  var startRow = 2;
+
+  function normStr(s) {
+    return String(s||'').trim().toUpperCase()
+      .replace(/[àáảãạăắằẳẵặâấầẩẫậ]/gi,'A')
+      .replace(/[èéẻẽẹêếềểễệ]/gi,'E')
+      .replace(/[ìíỉĩị]/gi,'I')
+      .replace(/[òóỏõọôốồổỗộơớờởỡợ]/gi,'O')
+      .replace(/[ùúủũụưứừửữự]/gi,'U')
+      .replace(/[đ]/gi,'D')
+      .replace(/[ýỳỷỹỵ]/gi,'Y');
+  }
+
+  function mapCH(raw) {
+    var n = normStr(raw);
+    if (n.indexOf('CS1') !== -1) return 'tueTinh';
+    if (n.indexOf('CS2') !== -1) return 'timesCity';
+    if (n.indexOf('CS3') !== -1) return 'pbc';
+    if (n.indexOf('CS4') !== -1) return 'trungHoa';
+    return null;
+  }
+
+  function isBSN(raw) {
+    return normStr(raw).indexOf('SINH NHAT') !== -1;
+  }
+
+  function parseDate(val) {
+    var s = String(val || '').trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return { year: parseInt(m[1]), month: parseInt(m[2]), day: parseInt(m[3]) };
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return { day: parseInt(m[1]), month: parseInt(m[2]), year: parseInt(m[3]) };
+    return null;
+  }
+
+  var invMap = {};
+
+  for (var r = startRow; r < v.length; r++) {
+    var row = v[r];
+
+    var chKey = mapCH(row[COL_CH]);
+    if (!chKey) continue;
+
+    var nguonRaw = String(row[COL_NGUON] || '').trim().toLowerCase();
+    if (nguonRaw !== 'offline') continue;
+
+    var maHD = String(row[COL_MAHD] || '').trim();
+    if (!maHD) continue;
+
+    var dateObj = parseDate(row[COL_NGAY]);
+    if (!dateObj) continue;
+    if (dateObj.month !== TARGET_MONTH || dateObj.year !== TARGET_YEAR) continue;
+
+    var key = chKey + '_' + maHD;
+    if (!invMap[key]) {
+      invMap[key] = { ch: chKey, day: dateObj.day, lineCount: 0, hasBSN: false };
+    }
+    invMap[key].lineCount++;
+    if (isBSN(row[COL_NHOM])) invMap[key].hasBSN = true;
+  }
+
+  var CH_KEYS = ['tueTinh','timesCity','pbc','trungHoa'];
+  var byDay = {};
+  var totals = {};
+  CH_KEYS.forEach(function(ch) { byDay[ch] = {}; totals[ch] = { g1:0, g2:0, g3:0, tong:0, sumItems:0 }; });
+
+  for (var k in invMap) {
+    var inv = invMap[k];
+    if (inv.hasBSN) continue;
+
+    if (!byDay[inv.ch][inv.day]) {
+      byDay[inv.ch][inv.day] = { g1:0, g2:0, g3:0, tong:0, sumItems:0 };
+    }
+    var agg = byDay[inv.ch][inv.day];
+    if (inv.lineCount === 1) agg.g1++;
+    else if (inv.lineCount === 2) agg.g2++;
+    else agg.g3++;
+    agg.tong++;
+    agg.sumItems += inv.lineCount;
+
+    var t = totals[inv.ch];
+    if (inv.lineCount === 1) t.g1++;
+    else if (inv.lineCount === 2) t.g2++;
+    else t.g3++;
+    t.tong++;
+    t.sumItems += inv.lineCount;
+  }
+
+  var result = { byDay: {}, totals: {} };
+  CH_KEYS.forEach(function(ch) {
+    result.byDay[ch] = {};
+    for (var day in byDay[ch]) {
+      var a = byDay[ch][day];
+      result.byDay[ch][day] = {
+        g1: a.g1, g2: a.g2, g3: a.g3, tong: a.tong,
+        tbItems: a.tong > 0 ? Math.round((a.sumItems / a.tong) * 100) / 100 : 0,
+        soLuongItem: a.sumItems, // tổng số lượng item (dòng sản phẩm) bán ra trong ngày, không tính BSN
+      };
+    }
+    var t = totals[ch];
+    result.totals[ch] = {
+      g1: t.g1, g2: t.g2, g3: t.g3, tong: t.tong,
+      tbItems: t.tong > 0 ? Math.round((t.sumItems / t.tong) * 100) / 100 : 0,
+      soLuongItem: t.sumItems,
+    };
+  });
+
+  return result;
+}
+
+// =============================================================
+// DEBUG
+// =============================================================
+function debugFabiHeader() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName('Fabi_TatCaCuaHang');
+  if (!sh) { Logger.log('Sheet not found'); return; }
+  var v = sh.getRange(1, 1, 2, sh.getLastColumn()).getDisplayValues();
+  Logger.log('Row 1: ' + JSON.stringify(v[0]));
+  Logger.log('Row 2: ' + JSON.stringify(v[1]));
+
+  // Kiểm tra giá trị "Loại món" của các sản phẩm BSN
+  var all = sh.getDataRange().getDisplayValues();
+  var COL_NHOM = 4, COL_LOAI = 5;
+  var loaiSet = {};
+  function norm_(s) {
+    return String(s||'').trim().toUpperCase()
+      .replace(/[àáảãạăắằẳẵặâấầẩẫậ]/gi,'A').replace(/[èéẻẽẹêếềểễệ]/gi,'E')
+      .replace(/[ìíỉĩị]/gi,'I').replace(/[òóỏõọôốồổỗộơớờởỡợ]/gi,'O')
+      .replace(/[ùúủũụưứừửữự]/gi,'U').replace(/[đ]/gi,'D').replace(/[ýỳỷỹỵ]/gi,'Y');
+  }
+  for (var r = 2; r < all.length; r++) {
+    var nhom = norm_(all[r][COL_NHOM]);
+    if (nhom.indexOf('SINH NHAT') !== -1) {
+      var loai = String(all[r][COL_LOAI] || '').trim();
+      loaiSet[loai] = (loaiSet[loai] || 0) + 1;
+    }
+  }
+  Logger.log('BSN Loai mon values: ' + JSON.stringify(loaiSet));
+
+  var msg = 'Cột "Loại món" = index 5 (F)\n\nCác giá trị Loại món của BSN:\n';
+  var hasAny = false;
+  for (var k in loaiSet) { msg += '"' + k + '" → ' + loaiSet[k] + ' dòng\n'; hasAny = true; }
+  if (!hasAny) msg += '(không tìm thấy BSN nào)';
+  SpreadsheetApp.getUi().alert(msg);
+}
+
+function debugFabiKPI() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var result = readFabiKPI(ss);
+  if (result.error) { Logger.log('ERROR: ' + result.error); return; }
+  Logger.log('tueTinh day 9: ' + JSON.stringify(result.tueTinh['9']));
+}
+
+function debugFabiKHClassification() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var result = readFabiKHClassification(ss);
+  if (result.error) { Logger.log('ERROR: ' + result.error); return; }
+  Logger.log('tueTinh day 9: ' + JSON.stringify(result.tueTinh['9']));
+}
+
+function debugFabiItemsDistribution() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var result = readFabiItemsDistribution(ss);
+  if (result.error) { Logger.log('ERROR: ' + result.error); return; }
+  Logger.log('tueTinh day 9: ' + JSON.stringify(result.byDay.tueTinh['9']));
+}
